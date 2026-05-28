@@ -16,6 +16,23 @@ const defaultAgent = new LangGraphAgent({
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Legal Contract Review agent (graph: legal_review_agent)
+//
+// Sibling agent that powers the /other-examples/legal-contract-review
+// surface. Points at the same LangGraph deployment as `defaultAgent` —
+// both graphs (`sample_agent`, `legal_review_agent`) are registered in
+// `agent/langgraph.json`. See PLAN.md §5.1 for the multi-graph wiring.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const legalAgent = new LangGraphAgent({
+  deploymentUrl:
+    process.env.AGENT_URL ||
+    process.env.LANGGRAPH_DEPLOYMENT_URL ||
+    "http://localhost:8123",
+  graphId: "legal_review_agent",
+  langsmithApiKey: process.env.LANGSMITH_API_KEY || "",
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CUSTOMIZATION SEAM #6 — Optional A2A bolt-on (Track 1 interop)
 //
 // Dormant unless A2A_AGENT_URL is set. When set, wraps the LangGraph
@@ -59,7 +76,7 @@ const orchestrationAgent =
       })();
 
 const runtime = new CopilotRuntime({
-  agents: { default: orchestrationAgent },
+  agents: { default: orchestrationAgent, legal: legalAgent },
   runner: new InMemoryAgentRunner(),
   openGenerativeUI: true,
   a2ui: {
