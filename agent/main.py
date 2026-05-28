@@ -3,6 +3,8 @@ This is the main entry point for the agent.
 It defines the workflow graph, state, tools, nodes and edges.
 """
 
+import os
+
 from copilotkit import CopilotKitMiddleware, StateStreamingMiddleware, StateItem
 from langchain.agents import create_agent
 
@@ -16,7 +18,19 @@ from src.a2ui_fixed_schema import search_flights
 
 from langchain_openai import ChatOpenAI
 
-model = ChatOpenAI(model="gpt-5.4-mini", model_kwargs={"parallel_tool_calls": False})
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# CUSTOMIZATION SEAM — LLM provider
+# Default: Gemini 3.5 Flash via Google's OpenAI-compatible endpoint.
+# Why this default: agentic-tuned, free tier, sponsor alignment, zero code rewrite.
+# Model ID empirically verified 2026-05-28 (scripts/probe-gemini.sh). See FROZEN.md.
+# To swap providers (OpenAI / Anthropic / LiteLLM): see .env.example.
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+model = ChatOpenAI(
+    model=os.getenv("MODEL", "gemini-3.5-flash"),
+    api_key=os.getenv("GEMINI_API_KEY"),
+    base_url=os.getenv("MODEL_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/"),
+    model_kwargs={"parallel_tool_calls": False},
+)
 
 agent = create_agent(
     model=model,
