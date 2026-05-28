@@ -63,9 +63,23 @@ nightly so the day langchain-openai gains support, we can flip the default.
 
 ### Free-tier rate-limit behavior
 
-_TBD — see Workstream A task A7. Will document observed cliff (HTTP status,
-retry-after header, time-to-recovery) and the "if you get rate-limited" runbook
-in HACKATHON.md once the 30-parallel load test runs._
+Measured 2026-05-28 against `gemini-2.5-flash` via the OpenAI-compat endpoint
+with a single API key. Tool see `scripts/load-test-gemini.py`.
+
+| Concurrency | Successes | Failures | p50 (ms) | p95 (ms) | p99 (ms) | Wall (ms) | Retry-After |
+|---|---|---|---|---|---|---|---|
+| 30 | 30 / 30 | 0 | 1707 | 2027 | 2104 | 2315 | none |
+| 100 | 100 / 100 | 0 | 1883 | 2314 | 2817 | 2973 | none |
+
+Single-key cliff is well above 100 concurrent agentic tool-calling requests.
+At London-hackathon scale (~30 teams × per-team API keys + a small mentor
+fallback pool), this is comfortable headroom. PLAN.md's three rate-limit
+mitigations (per-team keys via prereq email, mentor fallback pool, `OFFLINE=1`
+insurance) are sufficient; we do NOT need to ship a shared key.
+
+> **HACKATHON.md "if you get rate-limited" runbook:** if a `429` ever appears
+> in chat, fall back to `OFFLINE=1` for the demo. The envelope inspector still
+> shows real A2UI surfaces from `public/offline-envelopes.json`.
 
 ## Pinned versions (JavaScript)
 
