@@ -10,9 +10,11 @@
     "build": "next build",
     "start": "next start",
     "install:agent": "./scripts/setup-agent.sh || scripts\\setup-agent.bat",
-    "postinstall": "pnpm install:agent"
+    "postinstall": "pnpm install:agent",
+    "check-a2a": "tsx a2a/compliance/check.ts"
   },
   "dependencies": {
+    "@ag-ui/a2a-middleware": "0.0.2",
     "@copilotkit/a2ui-renderer": "1.56.5",
     "@copilotkit/react-core": "1.56.5",
     "@copilotkit/runtime": "1.56.5",
@@ -39,6 +41,7 @@
     "@types/react-dom": "^19",
     "concurrently": "^9.1.2",
     "tailwindcss": "^4",
+    "tsx": "^4.19.2",
     "typescript": "^5"
   }
 }
