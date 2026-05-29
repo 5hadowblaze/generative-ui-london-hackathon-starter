@@ -1,0 +1,71 @@
+[
+  {
+    "id": "root",
+    "component": "ListingDetail",
+    "address": { "path": "/listing/address" },
+    "neighborhood": { "path": "/listing/neighborhood" },
+    "price": { "path": "/listing/price" },
+    "pricePerSqft": { "path": "/listing/pricePerSqft" },
+    "propertyType": { "path": "/listing/propertyType" },
+    "status": { "path": "/listing/status" },
+    "beds": { "path": "/listing/beds" },
+    "baths": { "path": "/listing/baths" },
+    "sqft": { "path": "/listing/sqft" },
+    "yearBuilt": { "path": "/listing/yearBuilt" },
+    "schoolRating": { "path": "/listing/schoolRating" },
+    "listingAgent": { "path": "/listing/listingAgent" },
+    "notes": { "path": "/listing/notes" },
+    "amenitiesChildren": { "componentId": "amenity-chip", "path": "/amenities" },
+    "roomsChildren": { "componentId": "room-row", "path": "/rooms" },
+    "compsChildren": { "componentId": "comp-row", "path": "/comps" },
+    "schoolsChildren": { "componentId": "school-row", "path": "/schools" },
+    "tourAction": {
+      "event": {
+        "name": "request_tour",
+        "context": {
+          "listingId": { "path": "/listing/id" },
+          "address": { "path": "/listing/address" }
+        }
+      }
+    },
+    "offerAction": {
+      "event": {
+        "name": "request_offer",
+        "context": {
+          "listingId": { "path": "/listing/id" },
+          "address": { "path": "/listing/address" }
+        }
+      }
+    }
+  },
+  {
+    "id": "amenity-chip",
+    "component": "AmenityChip",
+    "label": { "path": "label" }
+  },
+  {
+    "id": "room-row",
+    "component": "RoomRow",
+    "label": { "path": "label" },
+    "detail": { "path": "detail" }
+  },
+  {
+    "id": "comp-row",
+    "component": "CompRow",
+    "address": { "path": "address" },
+    "soldPrice": { "path": "soldPrice" },
+    "beds": { "path": "beds" },
+    "baths": { "path": "baths" },
+    "sqft": { "path": "sqft" },
+    "pricePerSqft": { "path": "pricePerSqft" },
+    "soldDate": { "path": "soldDate" }
+  },
+  {
+    "id": "school-row",
+    "component": "SchoolRow",
+    "name": { "path": "name" },
+    "level": { "path": "level" },
+    "rating": { "path": "rating" },
+    "distance": { "path": "distance" }
+  }
+]

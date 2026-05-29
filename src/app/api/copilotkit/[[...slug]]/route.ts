@@ -33,6 +33,75 @@ const legalAgent = new LangGraphAgent({
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// RoundsAI Ward Rounds Copilot agent (graph: healthcare_agent)
+//
+// Sibling agent that powers the /other-examples/healthcare surface.
+// Points at the same LangGraph deployment as `defaultAgent` — when
+// active in dev, the `healthcare_agent` graph entry would live in the
+// project-root `agent/langgraph.json` (currently disabled by default
+// alongside legal_review_agent; canonical entry is in
+// `other-examples/healthcare/agent/langgraph.json`).
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const healthcareAgent = new LangGraphAgent({
+  deploymentUrl:
+    process.env.AGENT_URL ||
+    process.env.LANGGRAPH_DEPLOYMENT_URL ||
+    "http://localhost:8123",
+  graphId: "healthcare_agent",
+  langsmithApiKey: process.env.LANGSMITH_API_KEY || "",
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Homestead realestate agent (graph: realestate_agent)
+//
+// Sibling agent that powers the /other-examples/realestate surface.
+// Same dev-server pattern as the healthcare entry above — canonical
+// langgraph.json entry lives in
+// `other-examples/realestate/agent/langgraph.json`.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const realestateAgent = new LangGraphAgent({
+  deploymentUrl:
+    process.env.AGENT_URL ||
+    process.env.LANGGRAPH_DEPLOYMENT_URL ||
+    "http://localhost:8123",
+  graphId: "realestate_agent",
+  langsmithApiKey: process.env.LANGSMITH_API_KEY || "",
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TripWeaver / Travel agent (graph: travel_agent)
+//
+// Powers the /other-examples/travel surface. Same dev-server pattern
+// as the siblings above — canonical langgraph.json entry lives in
+// `other-examples/travel/agent/langgraph.json`.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const travelAgent = new LangGraphAgent({
+  deploymentUrl:
+    process.env.AGENT_URL ||
+    process.env.LANGGRAPH_DEPLOYMENT_URL ||
+    "http://localhost:8123",
+  graphId: "travel_agent",
+  langsmithApiKey: process.env.LANGSMITH_API_KEY || "",
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ScholarAI / Edtech agent (graph: edtech_agent)
+//
+// Powers the /other-examples/edtech surface. Same dev-server pattern
+// as the siblings above — canonical langgraph.json entry lives in
+// `other-examples/edtech/agent/langgraph.json` and is validated by
+// `pnpm smoke`'s per-example probe.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const edtechAgent = new LangGraphAgent({
+  deploymentUrl:
+    process.env.AGENT_URL ||
+    process.env.LANGGRAPH_DEPLOYMENT_URL ||
+    "http://localhost:8123",
+  graphId: "edtech_agent",
+  langsmithApiKey: process.env.LANGSMITH_API_KEY || "",
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CUSTOMIZATION SEAM #6 — Optional A2A bolt-on (Track 1 interop)
 //
 // Dormant unless A2A_AGENT_URL is set. When set, wraps the LangGraph
@@ -74,7 +143,14 @@ const orchestrationAgent =
       })();
 
 const runtime = new CopilotRuntime({
-  agents: { default: orchestrationAgent, legal: legalAgent },
+  agents: {
+    default: orchestrationAgent,
+    legal: legalAgent,
+    healthcare: healthcareAgent,
+    realestate: realestateAgent,
+    travel: travelAgent,
+    edtech: edtechAgent,
+  },
   runner: new InMemoryAgentRunner(),
   openGenerativeUI: true,
   a2ui: {

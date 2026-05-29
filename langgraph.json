@@ -1,0 +1,22 @@
+{
+  "python_version": "3.12",
+  "dockerfile_lines": [],
+  "dependencies": [
+    "./agent",
+    "./other-examples/legal-contract-review/agent",
+    "./other-examples/healthcare/agent",
+    "./other-examples/travel/agent",
+    "./other-examples/realestate/agent",
+    "./other-examples/edtech/agent"
+  ],
+  "package_manager": "uv",
+  "graphs": {
+    "sample_agent": "./agent/main.py:graph",
+    "legal_review_agent": "legal_review_agent.graph:graph",
+    "healthcare_agent": "healthcare_agent.graph:graph",
+    "travel_agent": "travel_agent.graph:graph",
+    "realestate_agent": "realestate_agent.graph:graph",
+    "edtech_agent": "edtech_agent.graph:graph"
+  },
+  "env": "./.env"
+}

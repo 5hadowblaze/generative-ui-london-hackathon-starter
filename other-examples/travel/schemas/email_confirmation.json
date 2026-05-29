@@ -1,0 +1,16 @@
+[
+  {
+    "id": "root",
+    "component": "TravelSurface",
+    "headline": "Email sent",
+    "sub": "Demo data — no email actually delivered.",
+    "children": ["confirmation"]
+  },
+  {
+    "id": "confirmation",
+    "component": "ConfirmationCard",
+    "headline": { "path": "/headline" },
+    "summary": { "path": "/summary" },
+    "recipient": { "path": "/recipient" }
+  }
+]

@@ -1,0 +1,281 @@
+/**
+ * TripWeaver page chrome — page-level layout, brand header, suggestion
+ * chips, and sticky bottom toolbar. The A2UI surfaces themselves inherit
+ * from `other-examples/travel/catalog/theme.css` (scoped to
+ * `[data-catalog-style="travel"]`); this file only owns the chrome.
+ *
+ * Layout shape: chat-on-top, scroll-stack surfaces below. Sticky bottom
+ * trip-summary toolbar.
+ *
+ * The palette intentionally re-tints the parent app's blur backdrop to
+ * sky+coral (overridden via the page-scoped `.tw-page` selector) so the
+ * BackgroundBlurCircles component lands in the travel theme without
+ * leaking to the rest of the app.
+ */
+
+/* ── Page palette overrides for the parent blur backdrop ──────── */
+.tw-page {
+  --cpk-blur-lilac: rgba(86, 176, 245, 0.32);
+  --cpk-blur-orange: rgba(255, 138, 101, 0.22);
+  --cpk-blur-yellow: rgba(249, 199, 79, 0.18);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: linear-gradient(180deg, #fffdf8 0%, #f6fbff 100%);
+  color: #0d1f33;
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.tw-header {
+  position: relative;
+  z-index: 10;
+  padding: 18px 28px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid rgba(50, 150, 220, 0.18);
+  background: rgba(255, 253, 248, 0.55);
+  backdrop-filter: blur(8px);
+}
+
+.tw-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  /* Solid color — explicitly NOT a gradient with transparent fill.
+     Sky-deep reads on cream and on white surfaces. */
+  color: #3296dc;
+}
+
+.tw-brand-glyph {
+  width: 26px;
+  height: 26px;
+  /* Coral wing-tip — second color via a small tilt + drop shadow rather
+     than a transparent-fill gradient. Keeps the mark legible at any
+     small render size. */
+  filter: drop-shadow(0 1px 0 rgba(255, 138, 101, 0.45));
+}
+
+.tw-brand-wordmark {
+  font-family: var(--font-body-loader), "Inter", ui-sans-serif, system-ui,
+    sans-serif;
+  font-weight: 800;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+  /* SOLID color — sky-deep. No transparent-fill gradients.
+     A coral underline accent provides the secondary brand color. */
+  color: #3296dc;
+  position: relative;
+}
+
+.tw-brand-wordmark::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: -3px;
+  height: 2px;
+  background: #ff8a65;
+  border-radius: 2px;
+}
+
+.tw-tagline {
+  margin: 0;
+  color: #3a4a5f;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 640px) {
+  .tw-tagline {
+    display: none;
+  }
+}
+
+/* ── Main column ─────────────────────────────────────────────── */
+.tw-main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 24px 110px; /* bottom padding clears sticky toolbar */
+  max-width: 920px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (max-width: 640px) {
+  .tw-main {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+/* ── Chat panel ──────────────────────────────────────────────── */
+.tw-chat-panel {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(50, 150, 220, 0.18);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px -16px rgba(50, 150, 220, 0.45);
+  padding: 8px 12px 4px;
+  /* On desktop: cap the chat height so the surfaces below get a real
+     scroll-stack viewport. On mobile: full natural height. */
+  min-height: 220px;
+  max-height: 360px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.tw-chat-panel > * {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Suggestion chips ────────────────────────────────────────── */
+.tw-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 4px 6px;
+}
+
+.tw-suggestion-chip {
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(50, 150, 220, 0.32);
+  background: rgba(255, 255, 255, 0.7);
+  color: #1a3a5c;
+  cursor: pointer;
+  transition: background 120ms ease, transform 120ms ease,
+    border-color 120ms ease;
+}
+
+.tw-suggestion-chip:hover {
+  background: rgba(86, 176, 245, 0.12);
+  border-color: #3296dc;
+  transform: translateY(-1px);
+}
+
+.tw-suggestion-chip:active {
+  transform: translateY(0);
+}
+
+.tw-suggestion-chip:focus-visible {
+  outline: 2px solid #ff8a65;
+  outline-offset: 2px;
+}
+
+/* ── Surfaces (scroll-stack) ─────────────────────────────────── */
+.tw-surfaces {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 0 4px;
+  min-height: 240px;
+}
+
+.tw-surfaces-placeholder {
+  margin: 12px 0;
+  padding: 32px 24px;
+  border: 1px dashed rgba(50, 150, 220, 0.32);
+  border-radius: 14px;
+  text-align: center;
+  color: #6b7a8c;
+  background: rgba(255, 255, 255, 0.45);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.tw-surfaces-placeholder-sub {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: #a3b1c2;
+}
+
+/* ── Sticky bottom toolbar (trip summary) ────────────────────── */
+.tw-toolbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  padding: 10px 20px 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 253, 248, 0.0) 0%,
+    rgba(255, 253, 248, 0.95) 24%,
+    rgba(255, 253, 248, 0.98) 100%
+  );
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(50, 150, 220, 0.18);
+}
+
+.tw-toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.85rem;
+}
+
+.tw-toolbar-leg {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.tw-toolbar-label {
+  color: #6b7a8c;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tw-toolbar-value {
+  color: #0d1f33;
+  font-weight: 600;
+}
+
+.tw-toolbar-arrow {
+  color: #3296dc;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.tw-toolbar-divider {
+  width: 1px;
+  height: 14px;
+  background: rgba(50, 150, 220, 0.22);
+}
+
+.tw-toolbar-disclaimer {
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 0.7rem;
+  color: #a3b1c2;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 640px) {
+  .tw-toolbar-row {
+    gap: 8px;
+    font-size: 0.78rem;
+  }
+  .tw-toolbar-divider {
+    display: none;
+  }
+}

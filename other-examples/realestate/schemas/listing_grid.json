@@ -1,0 +1,32 @@
+[
+  {
+    "id": "root",
+    "component": "ListingGrid",
+    "filterSummary": { "path": "/filterSummary" },
+    "children": { "componentId": "listing-card", "path": "/listings" }
+  },
+  {
+    "id": "listing-card",
+    "component": "ListingCard",
+    "address": { "path": "address" },
+    "neighborhood": { "path": "neighborhood" },
+    "beds": { "path": "beds" },
+    "baths": { "path": "baths" },
+    "sqft": { "path": "sqft" },
+    "price": { "path": "price" },
+    "pricePerSqft": { "path": "pricePerSqft" },
+    "propertyType": { "path": "propertyType" },
+    "schoolRating": { "path": "schoolRating" },
+    "status": { "path": "status" },
+    "action": {
+      "event": {
+        "name": "view_listing_details",
+        "context": {
+          "listingId": { "path": "id" },
+          "address": { "path": "address" },
+          "price": { "path": "price" }
+        }
+      }
+    }
+  }
+]

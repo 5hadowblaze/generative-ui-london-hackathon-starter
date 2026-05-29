@@ -1,0 +1,402 @@
+/**
+ * Homestead route shell — header, canvas, footer, slide-over chat panel.
+ *
+ * NOT scoped under a catalog-style attribute because this owns the page
+ * chrome (header / footer / overlays). The A2UI surface that renders
+ * INSIDE this shell carries its own `[data-catalog-style="realestate"]`
+ * wrapper that the renderer outputs, so the catalog theme applies there
+ * without leaking out.
+ *
+ * Visual identity matches the realestate catalog: warm taupe / sage /
+ * cream / terracotta. Fonts come from the page's CSS variables
+ * (`--font-fraunces`, `--font-inter`) which next/font/google injects on
+ * the root shell div.
+ */
+
+.hs-shell {
+  --hs-cream: #fbf7ec;
+  --hs-cream-deep: #f4ecd8;
+  --hs-paper: #fffdf7;
+  --hs-ink: #2a241c;
+  --hs-ink-muted: #6a5b48;
+  --hs-ink-faint: #9a8b78;
+  --hs-taupe: #9d8765;
+  --hs-taupe-deep: #6a5841;
+  --hs-sage: #5b7849;
+  --hs-sage-soft: #b1c79c;
+  --hs-sage-pale: #e2ecd5;
+  --hs-terracotta: #c69e60;
+  --hs-border: #d6c8a8;
+  --hs-border-faint: #ece2c9;
+
+  --hs-shadow: 0 1px 2px rgba(42, 36, 28, 0.04),
+    0 6px 14px rgba(42, 36, 28, 0.06);
+
+  font-family: var(--font-inter, "Inter", system-ui, -apple-system,
+      BlinkMacSystemFont, sans-serif);
+  background: var(--hs-cream);
+  color: var(--hs-ink);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+
+  /* Paper-grain texture for the whole shell — same noise as the catalog. */
+  background-image:
+    radial-gradient(rgba(157, 135, 101, 0.05) 1px, transparent 1px),
+    radial-gradient(rgba(106, 88, 65, 0.025) 1px, transparent 1px);
+  background-size: 4px 4px, 8px 8px;
+  background-position: 0 0, 2px 3px;
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.hs-shell .hs-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgba(251, 247, 236, 0.92);
+  backdrop-filter: saturate(140%) blur(8px);
+  border-bottom: 1px solid var(--hs-border-faint);
+  padding: 12px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.hs-shell .hs-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.hs-shell .hs-logo-tile {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--hs-paper);
+  border: 1px solid var(--hs-sage-soft);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(91, 120, 73, 0.12);
+}
+
+.hs-shell .hs-header-wordmark {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.hs-shell .hs-header-product {
+  font-family: var(--font-fraunces, "Fraunces", Georgia, serif);
+  font-size: 1.18rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: var(--hs-ink);
+}
+
+.hs-shell .hs-header-tagline {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--hs-taupe-deep);
+  margin: 0;
+}
+
+.hs-shell .hs-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hs-shell .hs-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--hs-taupe-deep);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+  font-family: inherit;
+}
+.hs-shell .hs-nav-btn:hover {
+  background: var(--hs-paper);
+  border-color: var(--hs-border-faint);
+}
+.hs-shell .hs-nav-btn[data-active="true"] {
+  background: var(--hs-sage-pale);
+  border-color: var(--hs-sage-soft);
+  color: var(--hs-sage);
+}
+.hs-shell .hs-nav-btn-primary {
+  background: var(--hs-sage);
+  color: #fff;
+  border-color: var(--hs-sage);
+}
+.hs-shell .hs-nav-btn-primary:hover {
+  background: #4f6a3f;
+  border-color: #4f6a3f;
+}
+.hs-shell .hs-nav-icon {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.7;
+}
+.hs-shell .hs-nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--hs-cream-deep);
+  color: var(--hs-taupe-deep);
+  font-size: 0.7rem;
+  font-weight: 700;
+  border: 1px solid var(--hs-border);
+}
+
+/* ── Canvas ──────────────────────────────────────────────────── */
+.hs-shell .hs-canvas {
+  flex: 1;
+  position: relative;
+  padding: 28px 0 56px;
+}
+
+/* ── Empty hero (pre-first-envelope state) ───────────────────── */
+.hs-shell .hs-empty-hero {
+  max-width: 720px;
+  margin: 24px auto 36px;
+  padding: 36px 32px 28px;
+  text-align: left;
+  background: var(--hs-paper);
+  border: 1px solid var(--hs-border-faint);
+  border-radius: 16px;
+  box-shadow: var(--hs-shadow);
+}
+.hs-shell .hs-empty-title {
+  font-family: var(--font-fraunces, "Fraunces", Georgia, serif);
+  font-weight: 600;
+  font-size: 2.4rem;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  margin: 6px 0 14px;
+  color: var(--hs-ink);
+}
+.hs-shell .hs-empty-blurb {
+  font-size: 0.96rem;
+  line-height: 1.6;
+  color: var(--hs-ink-muted);
+  margin: 0 0 18px;
+}
+.hs-shell .hs-empty-suggestions {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px;
+}
+.hs-shell .hs-empty-suggestions li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--hs-cream);
+  border: 1px solid var(--hs-border-faint);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: var(--hs-ink);
+  font-family: var(--font-fraunces, "Fraunces", Georgia, serif);
+}
+.hs-shell .hs-empty-suggestions svg {
+  width: 14px;
+  height: 14px;
+  color: var(--hs-sage);
+  stroke-width: 1.8;
+}
+.hs-shell .hs-empty-status {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--hs-taupe-deep);
+}
+
+/* ── Comps rail (toggled via header) ─────────────────────────── */
+.hs-shell .hs-comps-rail {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  max-width: 280px;
+  padding: 14px 16px;
+  background: var(--hs-paper);
+  border: 1px solid var(--hs-border-faint);
+  border-radius: 12px;
+  box-shadow: var(--hs-shadow);
+  z-index: 4;
+}
+.hs-shell .hs-comps-rail-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--hs-sage);
+}
+.hs-shell .hs-comps-rail-eyebrow svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.8;
+}
+.hs-shell .hs-comps-rail-body {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--hs-ink-muted);
+  line-height: 1.5;
+}
+
+/* ── Footer ──────────────────────────────────────────────────── */
+.hs-shell .hs-footer {
+  padding: 22px 28px;
+  border-top: 1px solid var(--hs-border-faint);
+  background: var(--hs-cream-deep);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: var(--hs-taupe-deep);
+  font-family: var(--font-fraunces, "Fraunces", Georgia, serif);
+  font-weight: 500;
+}
+.hs-shell .hs-footer-fineprint {
+  color: var(--hs-ink-faint);
+  font-family: var(--font-inter, "Inter", sans-serif);
+  font-weight: 400;
+  font-size: 0.75rem;
+}
+
+/* ── Slide-over chat panel ──────────────────────────────────── */
+.hs-shell .hs-chat-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 36, 28, 0.32);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 260ms ease;
+  z-index: 9;
+}
+.hs-shell .hs-chat-scrim[data-open="true"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.hs-shell .hs-chat-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(420px, 95vw);
+  background: var(--hs-paper);
+  border-left: 1px solid var(--hs-sage-soft);
+  box-shadow: -10px 0 30px rgba(42, 36, 28, 0.12);
+  transform: translateX(100%);
+  transition: transform 280ms cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+.hs-shell .hs-chat-panel[data-open="true"] {
+  transform: translateX(0%);
+}
+
+.hs-shell .hs-chat-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--hs-border-faint);
+  background: var(--hs-cream);
+}
+.hs-shell .hs-chat-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--hs-taupe-deep);
+  margin: 0 0 2px;
+}
+.hs-shell .hs-chat-title {
+  font-family: var(--font-fraunces, "Fraunces", Georgia, serif);
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin: 0;
+  color: var(--hs-ink);
+}
+.hs-shell .hs-chat-close {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--hs-taupe-deep);
+  padding: 6px;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.hs-shell .hs-chat-close:hover {
+  background: var(--hs-cream-deep);
+  border-color: var(--hs-border-faint);
+}
+.hs-shell .hs-chat-close svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.8;
+}
+
+.hs-shell .hs-chat-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 8px 16px;
+}
+
+/* The CopilotChat default styling sits inside .copilotKitChat — give it a
+   little breathing room on the slide-over. */
+.hs-shell .hs-chat-body > * {
+  height: 100%;
+}
+
+/* Responsive: on very small viewports, the slide-over takes the full
+   width. The scrim still dims the canvas underneath. */
+@media (max-width: 480px) {
+  .hs-shell .hs-chat-panel {
+    width: 100vw;
+    border-left: none;
+  }
+  .hs-shell .hs-header {
+    padding: 10px 16px;
+  }
+  .hs-shell .hs-canvas {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .hs-shell .hs-empty-hero {
+    margin: 16px;
+    padding: 24px 20px;
+  }
+}

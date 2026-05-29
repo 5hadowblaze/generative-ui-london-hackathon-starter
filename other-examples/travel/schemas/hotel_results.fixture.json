@@ -1,0 +1,63 @@
+{
+  "name": "hotel-results-times-square",
+  "description": "TripWeaver fixed-schema scenario: search_hotels returns 3 hotels near Times Square under $300/night.",
+  "surfaceId": "hotel-results",
+  "catalogId": "copilotkit://travel-catalog",
+  "components": [
+    {
+      "id": "root",
+      "component": "TravelSurface",
+      "headline": "Hotels",
+      "sub": "Demo data — synthetic prices, not bookable.",
+      "children": { "componentId": "hotel-card-item", "path": "/hotels" }
+    },
+    {
+      "id": "hotel-card-item",
+      "component": "HotelCard",
+      "name": { "path": "name" },
+      "imageUrl": { "path": "imageUrl" },
+      "neighborhood": { "path": "neighborhood" },
+      "rating": { "path": "rating" },
+      "nightlyRate": { "path": "nightlyRate" },
+      "action": {
+        "event": {
+          "name": "select_hotel",
+          "context": {
+            "hotelId": { "path": "id" },
+            "name": { "path": "name" },
+            "nightlyRate": { "path": "nightlyRate" }
+          }
+        }
+      }
+    }
+  ],
+  "data": {
+    "area": "Times Square",
+    "hotels": [
+      {
+        "id": "hotel-nyc-001",
+        "name": "The Pearl Midtown",
+        "neighborhood": "Times Square",
+        "imageUrl": "https://placehold.co/512x320/56b0f5/ffffff?text=Pearl",
+        "nightlyRate": "$249",
+        "rating": "4.6"
+      },
+      {
+        "id": "hotel-nyc-002",
+        "name": "Broadway Skyline Suites",
+        "neighborhood": "Theater District",
+        "imageUrl": "https://placehold.co/512x320/3296dc/ffffff?text=Skyline",
+        "nightlyRate": "$289",
+        "rating": "4.4"
+      },
+      {
+        "id": "hotel-nyc-003",
+        "name": "Hudson Loft Hotel",
+        "neighborhood": "Hell's Kitchen",
+        "imageUrl": "https://placehold.co/512x320/ff8a65/ffffff?text=Hudson",
+        "nightlyRate": "$195",
+        "rating": "4.5"
+      }
+    ]
+  }
+}

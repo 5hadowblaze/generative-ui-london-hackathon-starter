@@ -1,0 +1,31 @@
+[
+  {
+    "id": "root",
+    "component": "TravelSurface",
+    "headline": "Your itinerary",
+    "sub": "Demo data — synthetic plan, not bookable.",
+    "children": ["itinerary-timeline"]
+  },
+  {
+    "id": "itinerary-timeline",
+    "component": "ItineraryTimeline",
+    "destination": { "path": "/destination" },
+    "days": { "path": "/days" },
+    "children": { "componentId": "itinerary-day-item", "path": "/plan" }
+  },
+  {
+    "id": "itinerary-day-item",
+    "component": "ItineraryDay",
+    "day": { "path": "day" },
+    "title": { "path": "title" },
+    "children": { "componentId": "itinerary-item", "path": "items" }
+  },
+  {
+    "id": "itinerary-item",
+    "component": "ItineraryItem",
+    "time": { "path": "time" },
+    "title": { "path": "title" },
+    "location": { "path": "location" },
+    "category": { "path": "category" }
+  }
+]

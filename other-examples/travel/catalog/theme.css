@@ -1,0 +1,614 @@
+/**
+ * TripWeaver Catalog — Scoped Theme
+ *
+ * Every rule in this file is scoped under `[data-catalog-style="travel"]`
+ * so the dashboard demo's CSS variables (defined globally in
+ * `src/lib/a2ui-theme.css` and `src/app/globals.css`) are untouched.
+ *
+ * Palette per the launch spec:
+ *   - sky blue       #56b0f5   (primary)
+ *   - sky deep       #3296dc   (primary hover / border)
+ *   - sunset coral   #ff8a65   (accent)
+ *   - cream surface  #fffaf2   (card background)
+ *   - warm gold      #f9c74f   (rating star)
+ *
+ * Type ramp:
+ *   - body:  Inter / system-ui (inherits from --font-body-loader)
+ *   - mono:  Spline Sans Mono (flight codes, times, prices)
+ *
+ * Motion:
+ *   - 200ms slide-in for new card sets (tw-slide-in)
+ *
+ * NOTE: `next/font/google` loads Plus Jakarta Sans + Spline Sans Mono in
+ * `src/app/layout.tsx`. Their variables (--font-body-loader,
+ * --font-code-loader) are exposed on `<html>`, so we reference them here
+ * rather than re-loading. Inter is preferred for the body via the
+ * inherited family chain.
+ */
+
+[data-catalog-style="travel"] {
+  /* ── Palette ────────────────────────────────────────────────── */
+  --tw-sky: #56b0f5;
+  --tw-sky-deep: #3296dc;
+  --tw-coral: #ff8a65;
+  --tw-coral-deep: #f0712a;
+  --tw-cream: #fffaf2;
+  --tw-cream-2: #fff5e6;
+  --tw-gold: #f9c74f;
+
+  --tw-ink: #0d1f33;
+  --tw-ink-2: #3a4a5f;
+  --tw-muted: #6b7a8c;
+  --tw-line: rgba(50, 150, 220, 0.18);
+  --tw-shadow: 0 10px 30px -12px rgba(50, 150, 220, 0.25),
+    0 4px 10px -4px rgba(255, 138, 101, 0.18);
+  --tw-shadow-sm: 0 2px 6px -2px rgba(50, 150, 220, 0.22);
+
+  /* Category accents for ItineraryItem glyphs. */
+  --tw-cat-museum: var(--tw-sky-deep);
+  --tw-cat-food: var(--tw-coral-deep);
+  --tw-cat-transit: #7b8aa1;
+  --tw-cat-experience: var(--tw-sky);
+  --tw-cat-rest: #a3b1c2;
+
+  /* ── Typography ─────────────────────────────────────────────── */
+  font-family: var(--font-body-loader), "Inter", ui-sans-serif, system-ui,
+    -apple-system, sans-serif;
+  color: var(--tw-ink);
+  line-height: 1.55;
+}
+
+[data-catalog-style="travel"] .tw-mono {
+  font-family: var(--font-code-loader), "Spline Sans Mono", ui-monospace,
+    "SF Mono", Menlo, Consolas, monospace;
+  font-feature-settings: "tnum";
+  letter-spacing: -0.01em;
+}
+
+/* ── Slide-in motion ──────────────────────────────────────────── */
+@keyframes tw-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+[data-catalog-style="travel"] .tw-slide-in {
+  animation: tw-slide-in 200ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-catalog-style="travel"] .tw-slide-in {
+    animation: none;
+  }
+}
+
+/* ── Surface (root container) ─────────────────────────────────── */
+[data-catalog-style="travel"] .tw-surface {
+  background: var(--tw-cream);
+  border: 1px solid var(--tw-line);
+  border-radius: 18px;
+  padding: 22px 22px 24px;
+  box-shadow: var(--tw-shadow);
+  margin: 0 0 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+[data-catalog-style="travel"] .tw-surface::before {
+  /* Coral blur accent in the corner. */
+  content: "";
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 200px;
+  height: 200px;
+  background: var(--tw-coral);
+  opacity: 0.18;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-catalog-style="travel"] .tw-surface::after {
+  /* Sky blur accent on the opposite corner. */
+  content: "";
+  position: absolute;
+  bottom: -80px;
+  left: -40px;
+  width: 220px;
+  height: 220px;
+  background: var(--tw-sky);
+  opacity: 0.18;
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-catalog-style="travel"] .tw-surface-header,
+[data-catalog-style="travel"] .tw-surface-body {
+  position: relative;
+  z-index: 1;
+}
+
+[data-catalog-style="travel"] .tw-surface-header {
+  margin-bottom: 16px;
+}
+
+[data-catalog-style="travel"] .tw-surface-headline {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin: 0 0 4px;
+  color: var(--tw-ink);
+}
+
+[data-catalog-style="travel"] .tw-surface-sub {
+  margin: 0;
+  color: var(--tw-muted);
+  font-size: 0.9rem;
+}
+
+[data-catalog-style="travel"] .tw-surface-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── FlightCard ───────────────────────────────────────────────── */
+[data-catalog-style="travel"] .tw-flight-card {
+  background: #ffffff;
+  border: 1px solid var(--tw-line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--tw-shadow-sm);
+}
+
+[data-catalog-style="travel"] .tw-flight-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+[data-catalog-style="travel"] .tw-flight-card-airline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+[data-catalog-style="travel"] .tw-flight-card-logo {
+  border-radius: 6px;
+  background: var(--tw-cream-2);
+  padding: 2px;
+}
+
+[data-catalog-style="travel"] .tw-flight-card-airline-name {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+[data-catalog-style="travel"] .tw-flight-card-flight-no {
+  margin: 2px 0 0;
+  color: var(--tw-muted);
+  font-size: 0.78rem;
+}
+
+[data-catalog-style="travel"] .tw-flight-card-price {
+  text-align: right;
+}
+
+[data-catalog-style="travel"] .tw-price {
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--tw-sky-deep);
+}
+
+[data-catalog-style="travel"] .tw-flight-card-date {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--tw-muted);
+  margin-top: 2px;
+}
+
+[data-catalog-style="travel"] .tw-flight-card-route {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 4px 0;
+}
+
+[data-catalog-style="travel"] .tw-flight-card-leg {
+  min-width: 64px;
+}
+
+[data-catalog-style="travel"] .tw-flight-card-leg-arrive {
+  text-align: right;
+}
+
+[data-catalog-style="travel"] .tw-time {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--tw-ink);
+}
+
+[data-catalog-style="travel"] .tw-flight-card-airport {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--tw-muted);
+  letter-spacing: 0.05em;
+}
+
+[data-catalog-style="travel"] .tw-flight-card-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--tw-muted);
+  font-size: 0.72rem;
+}
+
+[data-catalog-style="travel"] .tw-flight-card-duration {
+  font-weight: 500;
+}
+
+[data-catalog-style="travel"] .tw-flight-card-line {
+  display: block;
+  width: 100%;
+  min-width: 60px;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--tw-sky-deep) 50%,
+    transparent
+  );
+}
+
+[data-catalog-style="travel"] .tw-flight-card-stops {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+[data-catalog-style="travel"] .tw-flight-card-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────── */
+[data-catalog-style="travel"] .tw-btn {
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+}
+
+[data-catalog-style="travel"] .tw-btn-primary {
+  background: var(--tw-sky);
+  color: #ffffff;
+  border-color: var(--tw-sky);
+  box-shadow: 0 6px 14px -8px rgba(50, 150, 220, 0.6);
+}
+
+[data-catalog-style="travel"] .tw-btn-primary:hover {
+  background: var(--tw-sky-deep);
+  border-color: var(--tw-sky-deep);
+  transform: translateY(-1px);
+}
+
+[data-catalog-style="travel"] .tw-btn-primary:active {
+  transform: translateY(0);
+}
+
+[data-catalog-style="travel"] .tw-btn:focus-visible {
+  outline: 2px solid var(--tw-coral);
+  outline-offset: 2px;
+}
+
+/* ── HotelCard ────────────────────────────────────────────────── */
+[data-catalog-style="travel"] .tw-hotel-card {
+  background: #ffffff;
+  border: 1px solid var(--tw-line);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--tw-shadow-sm);
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  [data-catalog-style="travel"] .tw-hotel-card {
+    grid-template-columns: 180px 1fr;
+  }
+}
+
+[data-catalog-style="travel"] .tw-hotel-card-image-wrap {
+  background: var(--tw-cream-2);
+  min-height: 140px;
+  overflow: hidden;
+}
+
+[data-catalog-style="travel"] .tw-hotel-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+[data-catalog-style="travel"] .tw-hotel-card-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: space-between;
+}
+
+[data-catalog-style="travel"] .tw-hotel-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+[data-catalog-style="travel"] .tw-hotel-card-name {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--tw-ink);
+}
+
+[data-catalog-style="travel"] .tw-hotel-card-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.78rem;
+  color: var(--tw-ink-2);
+  font-weight: 600;
+}
+
+[data-catalog-style="travel"] .tw-hotel-card-rating > span[aria-hidden="true"] {
+  color: var(--tw-gold);
+}
+
+[data-catalog-style="travel"] .tw-hotel-card-neighborhood {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--tw-muted);
+}
+
+[data-catalog-style="travel"] .tw-hotel-card-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+
+[data-catalog-style="travel"] .tw-hotel-card-night {
+  font-size: 0.78rem;
+  color: var(--tw-muted);
+  font-weight: 500;
+}
+
+/* ── ItineraryTimeline ────────────────────────────────────────── */
+[data-catalog-style="travel"] .tw-itinerary {
+  background: #ffffff;
+  border: 1px solid var(--tw-line);
+  border-radius: 14px;
+  padding: 18px 18px 12px;
+  box-shadow: var(--tw-shadow-sm);
+}
+
+[data-catalog-style="travel"] .tw-itinerary-header {
+  margin-bottom: 12px;
+}
+
+[data-catalog-style="travel"] .tw-itinerary-title {
+  margin: 0 0 2px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+[data-catalog-style="travel"] .tw-itinerary-sub {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--tw-muted);
+}
+
+[data-catalog-style="travel"] .tw-itinerary-days {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+[data-catalog-style="travel"] .tw-itinerary-day-wrap {
+  list-style: none;
+}
+
+/* ── ItineraryDay — ported visual shape from a2a-travel ItineraryCard ── */
+[data-catalog-style="travel"] .tw-itinerary-day {
+  background: var(--tw-cream);
+  border: 1px solid var(--tw-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+[data-catalog-style="travel"] .tw-itinerary-day-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px dashed var(--tw-line);
+}
+
+[data-catalog-style="travel"] .tw-itinerary-day-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    var(--tw-sky) 0%,
+    var(--tw-sky-deep) 100%
+  );
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+[data-catalog-style="travel"] .tw-itinerary-day-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--tw-ink);
+}
+
+[data-catalog-style="travel"] .tw-itinerary-day-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── ItineraryItem ────────────────────────────────────────────── */
+[data-catalog-style="travel"] .tw-itinerary-item {
+  display: grid;
+  grid-template-columns: 56px 28px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 4px;
+  border-radius: 8px;
+  transition: background 120ms ease;
+}
+
+[data-catalog-style="travel"] .tw-itinerary-item:hover {
+  background: rgba(86, 176, 245, 0.06);
+}
+
+[data-catalog-style="travel"] .tw-itinerary-time {
+  font-size: 0.85rem;
+  color: var(--tw-ink-2);
+  font-weight: 500;
+}
+
+[data-catalog-style="travel"] .tw-itinerary-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: var(--tw-cat-experience);
+}
+
+[data-catalog-style="travel"] .tw-itinerary-item[data-category="museum"]
+  .tw-itinerary-glyph {
+  background: var(--tw-cat-museum);
+}
+[data-catalog-style="travel"] .tw-itinerary-item[data-category="food"]
+  .tw-itinerary-glyph {
+  background: var(--tw-cat-food);
+}
+[data-catalog-style="travel"] .tw-itinerary-item[data-category="transit"]
+  .tw-itinerary-glyph {
+  background: var(--tw-cat-transit);
+}
+[data-catalog-style="travel"] .tw-itinerary-item[data-category="rest"]
+  .tw-itinerary-glyph {
+  background: var(--tw-cat-rest);
+}
+
+[data-catalog-style="travel"] .tw-itinerary-item-body {
+  min-width: 0;
+}
+
+[data-catalog-style="travel"] .tw-itinerary-item-title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--tw-ink);
+}
+
+[data-catalog-style="travel"] .tw-itinerary-item-location {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--tw-muted);
+}
+
+/* ── ConfirmationCard ─────────────────────────────────────────── */
+[data-catalog-style="travel"] .tw-confirm-card {
+  background: linear-gradient(
+    135deg,
+    var(--tw-cream) 0%,
+    var(--tw-cream-2) 100%
+  );
+  border: 1px solid var(--tw-line);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  box-shadow: var(--tw-shadow-sm);
+}
+
+[data-catalog-style="travel"] .tw-confirm-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--tw-sky);
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+[data-catalog-style="travel"] .tw-confirm-body {
+  flex: 1;
+  min-width: 0;
+}
+
+[data-catalog-style="travel"] .tw-confirm-headline {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--tw-ink);
+}
+
+[data-catalog-style="travel"] .tw-confirm-summary {
+  margin: 4px 0 0;
+  color: var(--tw-ink-2);
+  font-size: 0.9rem;
+}
+
+[data-catalog-style="travel"] .tw-confirm-recipient {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  color: var(--tw-muted);
+}

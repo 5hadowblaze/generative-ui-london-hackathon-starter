@@ -1,0 +1,27 @@
+{
+  "name": "email-confirmation-default",
+  "description": "TripWeaver fixed-schema scenario: confirmation card after the user asks the agent to email the itinerary.",
+  "surfaceId": "email-confirmation",
+  "catalogId": "copilotkit://travel-catalog",
+  "components": [
+    {
+      "id": "root",
+      "component": "TravelSurface",
+      "headline": "Email sent",
+      "sub": "Demo data — no email actually delivered.",
+      "children": ["confirmation"]
+    },
+    {
+      "id": "confirmation",
+      "component": "ConfirmationCard",
+      "headline": { "path": "/headline" },
+      "summary": { "path": "/summary" },
+      "recipient": { "path": "/recipient" }
+    }
+  ],
+  "data": {
+    "recipient": "you@example.com",
+    "headline": "Itinerary on the way",
+    "summary": "We sent your 3-day NYC plan to you@example.com. (Demo only — no email was actually sent.)"
+  }
+}

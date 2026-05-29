@@ -1,0 +1,39 @@
+[
+  {
+    "id": "root",
+    "component": "OfferLetterDraft",
+    "address": { "path": "/listing/address" },
+    "neighborhood": { "path": "/listing/neighborhood" },
+    "askingPrice": { "path": "/listing/askingPrice" },
+    "offerAmount": { "path": "/offer/amount" },
+    "pctOfAsking": { "path": "/offer/pctOfAsking" },
+    "letter": { "path": "/letter" },
+    "sendAction": {
+      "event": {
+        "name": "send_offer",
+        "context": {
+          "listingId": { "path": "/listing/id" },
+          "offerAmount": { "path": "/offer/amount" },
+          "pctOfAsking": { "path": "/offer/pctOfAsking" }
+        }
+      }
+    },
+    "reviseAction": {
+      "event": {
+        "name": "revise_offer",
+        "context": {
+          "listingId": { "path": "/listing/id" },
+          "offerAmount": { "path": "/offer/amount" }
+        }
+      }
+    },
+    "cancelAction": {
+      "event": {
+        "name": "cancel_offer",
+        "context": {
+          "listingId": { "path": "/listing/id" }
+        }
+      }
+    }
+  }
+]

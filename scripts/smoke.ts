@@ -11,13 +11,20 @@
  *      (validates BOTH byPrompt and bySurface indices land — plan section 6.6)
  *   6. agent registration probe         — python -c probe for each langgraph.json
  *      graph (sample_agent + legal_review_agent — plan section 6.1 fix)
- *   7. Gemini probe (live)              — skipped when OFFLINE=1 or no key
+ *   7. per-example graph probe          — boot every other-examples/<id>/agent
+ *      graph in-process; defensive WARN-not-FAIL (plan §3, audit item 3)
+ *   8. Gemini probe (live)              — skipped when OFFLINE=1 or no key
  *
  * Exit non-zero if any step fails. Machine-parsable summary at the end.
  */
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import {
+  discoverExampleTargets,
+  probeExamples,
+  reportProbeOutcomes,
+} from "./_smoke-examples";
 
 const REPO_ROOT = join(__dirname, "..");
 
@@ -372,6 +379,33 @@ sys.exit(0)
         `${YELLOW}!${RESET} ${DIM}agent registration probe could not run (exit ${res.status}). Run \`pnpm install:agent\` to bootstrap the venv.${RESET}\n`,
       );
       return { pass: true, detail: `skipped (probe exit ${res.status})` };
+    },
+  },
+  {
+    name: "per-example graph probe (other-examples/*/agent)",
+    run: async () => {
+      // Plan §3 / audit item 3: walk every other-examples/<id>/EXAMPLE.json
+      // and confirm the sibling agent/graph.py imports cleanly. Defensive
+      // WARN-not-FAIL — see scripts/_smoke-examples.ts for the rationale.
+      const targets = discoverExampleTargets(REPO_ROOT);
+      if (targets.length === 0) {
+        console.log(
+          `${YELLOW}!${RESET} ${DIM}No examples found under other-examples/. Skipping.${RESET}\n`,
+        );
+        return { pass: true, detail: "no examples" };
+      }
+      const venvPython = join(REPO_ROOT, "agent", ".venv", "bin", "python");
+      const pythonBin = existsSync(venvPython) ? venvPython : "python3";
+      if (!existsSync(venvPython)) {
+        console.log(
+          `${YELLOW}!${RESET} ${DIM}agent/.venv/bin/python not found — using system python3. Run \`pnpm install:agent\` to bootstrap.${RESET}`,
+        );
+      }
+      const outcomes = probeExamples(targets, {
+        repoRoot: REPO_ROOT,
+        pythonBin,
+      });
+      return reportProbeOutcomes(outcomes);
     },
   },
   {

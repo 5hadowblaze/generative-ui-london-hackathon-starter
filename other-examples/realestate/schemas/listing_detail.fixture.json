@@ -1,0 +1,154 @@
+{
+  "name": "listing_detail_park_slope",
+  "description": "Canonical realestate-catalog scenario: show_listing_detail returns the 123 Maple St Park Slope brownstone with amenities, rooms, four comps, and three nearby schools.",
+  "surfaceId": "realestate-listing-detail",
+  "catalogId": "copilotkit://realestate-catalog",
+  "components": [
+    {
+      "id": "root",
+      "component": "ListingDetail",
+      "address": { "path": "/listing/address" },
+      "neighborhood": { "path": "/listing/neighborhood" },
+      "price": { "path": "/listing/price" },
+      "pricePerSqft": { "path": "/listing/pricePerSqft" },
+      "propertyType": { "path": "/listing/propertyType" },
+      "status": { "path": "/listing/status" },
+      "beds": { "path": "/listing/beds" },
+      "baths": { "path": "/listing/baths" },
+      "sqft": { "path": "/listing/sqft" },
+      "yearBuilt": { "path": "/listing/yearBuilt" },
+      "schoolRating": { "path": "/listing/schoolRating" },
+      "listingAgent": { "path": "/listing/listingAgent" },
+      "notes": { "path": "/listing/notes" },
+      "amenitiesChildren": { "componentId": "amenity-chip", "path": "/amenities" },
+      "roomsChildren": { "componentId": "room-row", "path": "/rooms" },
+      "compsChildren": { "componentId": "comp-row", "path": "/comps" },
+      "schoolsChildren": { "componentId": "school-row", "path": "/schools" },
+      "tourAction": {
+        "event": {
+          "name": "request_tour",
+          "context": {
+            "listingId": { "path": "/listing/id" },
+            "address": { "path": "/listing/address" }
+          }
+        }
+      },
+      "offerAction": {
+        "event": {
+          "name": "request_offer",
+          "context": {
+            "listingId": { "path": "/listing/id" },
+            "address": { "path": "/listing/address" }
+          }
+        }
+      }
+    },
+    {
+      "id": "amenity-chip",
+      "component": "AmenityChip",
+      "label": { "path": "label" }
+    },
+    {
+      "id": "room-row",
+      "component": "RoomRow",
+      "label": { "path": "label" },
+      "detail": { "path": "detail" }
+    },
+    {
+      "id": "comp-row",
+      "component": "CompRow",
+      "address": { "path": "address" },
+      "soldPrice": { "path": "soldPrice" },
+      "beds": { "path": "beds" },
+      "baths": { "path": "baths" },
+      "sqft": { "path": "sqft" },
+      "pricePerSqft": { "path": "pricePerSqft" },
+      "soldDate": { "path": "soldDate" }
+    },
+    {
+      "id": "school-row",
+      "component": "SchoolRow",
+      "name": { "path": "name" },
+      "level": { "path": "level" },
+      "rating": { "path": "rating" },
+      "distance": { "path": "distance" }
+    }
+  ],
+  "data": {
+    "listing": {
+      "id": "HS-1001",
+      "address": "123 Maple St",
+      "neighborhood": "Park Slope",
+      "beds": "3",
+      "baths": "2",
+      "sqft": "1,450",
+      "price": "$1,395,000",
+      "pricePerSqft": "$962 / sqft",
+      "propertyType": "Brownstone",
+      "schoolRating": "8.4",
+      "status": "Active",
+      "yearBuilt": "1908",
+      "notes": "Owner-occupied; flexible on close. Original parquet floors, parlor-level fireplace, garden access.",
+      "listingAgent": "Casey Reyes"
+    },
+    "amenities": [
+      { "id": "am-0", "label": "Garden access" },
+      { "id": "am-1", "label": "Original parquet" },
+      { "id": "am-2", "label": "Parlor fireplace" },
+      { "id": "am-3", "label": "Skylight" },
+      { "id": "am-4", "label": "Walk to F train" }
+    ],
+    "rooms": [
+      { "id": "room-0", "label": "Parlor floor", "detail": "Living + dining + parlor fireplace" },
+      { "id": "room-1", "label": "Garden level", "detail": "Open kitchen + den + powder room" },
+      { "id": "room-2", "label": "Top floor", "detail": "3 bedrooms + full bath" }
+    ],
+    "comps": [
+      {
+        "id": "comp-0",
+        "address": "47 Garfield Pl",
+        "soldPrice": "$1,495,000",
+        "beds": "3",
+        "baths": "2.5",
+        "sqft": "1,680",
+        "pricePerSqft": "$890 / sqft",
+        "soldDate": "2026-03"
+      },
+      {
+        "id": "comp-1",
+        "address": "512 9th St",
+        "soldPrice": "$1,750,000",
+        "beds": "4",
+        "baths": "2",
+        "sqft": "1,820",
+        "pricePerSqft": "$962 / sqft",
+        "soldDate": "2026-02"
+      },
+      {
+        "id": "comp-2",
+        "address": "77 Berkeley Pl",
+        "soldPrice": "$1,875,000",
+        "beds": "4",
+        "baths": "3",
+        "sqft": "2,100",
+        "pricePerSqft": "$893 / sqft",
+        "soldDate": "2025-12"
+      },
+      {
+        "id": "comp-3",
+        "address": "38 Bergen St",
+        "soldPrice": "$1,395,000",
+        "beds": "3",
+        "baths": "2",
+        "sqft": "1,410",
+        "pricePerSqft": "$989 / sqft",
+        "soldDate": "2025-11"
+      }
+    ],
+    "schools": [
+      { "id": "school-0", "name": "PS 321 William Penn", "level": "Elementary", "rating": "9.1", "distance": "0.3 mi" },
+      { "id": "school-1", "name": "MS 51 William Alexander", "level": "Middle", "rating": "8.6", "distance": "0.5 mi" },
+      { "id": "school-2", "name": "John Jay Educational Campus", "level": "High", "rating": "7.4", "distance": "0.8 mi" }
+    ]
+  }
+}

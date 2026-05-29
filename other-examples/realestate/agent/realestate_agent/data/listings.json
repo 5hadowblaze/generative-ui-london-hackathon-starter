@@ -1,0 +1,407 @@
+{
+  "listings": [
+    {
+      "id": "HS-1001",
+      "address": "123 Maple St",
+      "neighborhood": "Park Slope",
+      "borough": "Brooklyn",
+      "beds": 3,
+      "baths": 2,
+      "sqft": 1450,
+      "price": 1395000,
+      "pricePerSqft": 962,
+      "yearBuilt": 1908,
+      "propertyType": "Brownstone",
+      "status": "Active",
+      "listingAgent": "Casey Reyes",
+      "schoolRating": 8.4,
+      "notes": "Owner-occupied; flexible on close. Original parquet floors, parlor-level fireplace, garden access.",
+      "amenities": [
+        "Garden access",
+        "Original parquet",
+        "Parlor fireplace",
+        "Skylight",
+        "Walk to F train"
+      ],
+      "rooms": [
+        { "label": "Parlor floor", "detail": "Living + dining + parlor fireplace" },
+        { "label": "Garden level", "detail": "Open kitchen + den + powder room" },
+        { "label": "Top floor", "detail": "3 bedrooms + full bath" }
+      ]
+    },
+    {
+      "id": "HS-1002",
+      "address": "47 Garfield Pl",
+      "neighborhood": "Park Slope",
+      "borough": "Brooklyn",
+      "beds": 3,
+      "baths": 2.5,
+      "sqft": 1680,
+      "price": 1495000,
+      "pricePerSqft": 890,
+      "yearBuilt": 1912,
+      "propertyType": "Brownstone",
+      "status": "Active",
+      "listingAgent": "Jordan Liu",
+      "schoolRating": 8.4,
+      "notes": "Renovated kitchen 2024. Eat-in breakfast nook, central air.",
+      "amenities": [
+        "Renovated kitchen (2024)",
+        "Central air",
+        "Eat-in breakfast nook",
+        "Backyard"
+      ],
+      "rooms": [
+        { "label": "Parlor floor", "detail": "Living + dining + powder room" },
+        { "label": "Garden level", "detail": "Renovated chef's kitchen + family room" },
+        { "label": "Top floor", "detail": "3 bedrooms + 2 full baths" }
+      ]
+    },
+    {
+      "id": "HS-1003",
+      "address": "512 9th St",
+      "neighborhood": "Park Slope",
+      "borough": "Brooklyn",
+      "beds": 4,
+      "baths": 2,
+      "sqft": 1820,
+      "price": 1750000,
+      "pricePerSqft": 962,
+      "yearBuilt": 1899,
+      "propertyType": "Brownstone",
+      "status": "Active",
+      "listingAgent": "Casey Reyes",
+      "schoolRating": 8.4,
+      "notes": "Garden access; needs roof work. Period detail intact, mantel & medallions.",
+      "amenities": [
+        "Garden access",
+        "Period mantels",
+        "Decorative medallions",
+        "South-facing"
+      ],
+      "rooms": [
+        { "label": "Parlor floor", "detail": "Twin parlors + period mantels" },
+        { "label": "Garden level", "detail": "Kitchen + dining + sunroom" },
+        { "label": "Top floor", "detail": "4 bedrooms" }
+      ]
+    },
+    {
+      "id": "HS-1004",
+      "address": "88 Bond St",
+      "neighborhood": "Boerum Hill",
+      "borough": "Brooklyn",
+      "beds": 2,
+      "baths": 2,
+      "sqft": 1100,
+      "price": 1185000,
+      "pricePerSqft": 1077,
+      "yearBuilt": 1925,
+      "propertyType": "Co-op",
+      "status": "Active",
+      "listingAgent": "Sam Patel",
+      "schoolRating": 7.9,
+      "notes": "Doorman building; low maintenance. Pre-war details preserved.",
+      "amenities": [
+        "Full-time doorman",
+        "Pre-war crown molding",
+        "Pet-friendly",
+        "Bike room",
+        "Roof access"
+      ],
+      "rooms": [
+        { "label": "Living", "detail": "Sunken living + dining alcove" },
+        { "label": "Kitchen", "detail": "Renovated; quartz counters" },
+        { "label": "Bedrooms", "detail": "2 bedrooms + 2 full baths" }
+      ]
+    },
+    {
+      "id": "HS-1005",
+      "address": "11 State St",
+      "neighborhood": "Cobble Hill",
+      "borough": "Brooklyn",
+      "beds": 3,
+      "baths": 2,
+      "sqft": 1390,
+      "price": 1395000,
+      "pricePerSqft": 1004,
+      "yearBuilt": 1890,
+      "propertyType": "Townhouse",
+      "status": "Active",
+      "listingAgent": "Morgan Hayes",
+      "schoolRating": 8.7,
+      "notes": "Historic district. Original shutters, marble bath.",
+      "amenities": [
+        "Historic district",
+        "Marble bath",
+        "Original shutters",
+        "Wood-burning fireplace"
+      ],
+      "rooms": [
+        { "label": "Main floor", "detail": "Living + fireplace + kitchen" },
+        { "label": "Upper floor", "detail": "Primary + en suite" },
+        { "label": "Top floor", "detail": "2 bedrooms + bath" }
+      ]
+    },
+    {
+      "id": "HS-1006",
+      "address": "304 Court St",
+      "neighborhood": "Carroll Gardens",
+      "borough": "Brooklyn",
+      "beds": 3,
+      "baths": 1.5,
+      "sqft": 1280,
+      "price": 1295000,
+      "pricePerSqft": 1012,
+      "yearBuilt": 1905,
+      "propertyType": "Brownstone",
+      "status": "Active",
+      "listingAgent": "Casey Reyes",
+      "schoolRating": 8.2,
+      "notes": "Top-floor unit; skylight. North-south light.",
+      "amenities": [
+        "Skylight",
+        "Original moldings",
+        "Walk to F/G",
+        "Storage cage"
+      ],
+      "rooms": [
+        { "label": "Main", "detail": "Open living + dining" },
+        { "label": "Kitchen", "detail": "Eat-in; window over sink" },
+        { "label": "Bedrooms", "detail": "3 bedrooms + 1.5 baths" }
+      ]
+    },
+    {
+      "id": "HS-1007",
+      "address": "201 Smith St",
+      "neighborhood": "Carroll Gardens",
+      "borough": "Brooklyn",
+      "beds": 2,
+      "baths": 1,
+      "sqft": 920,
+      "price": 895000,
+      "pricePerSqft": 973,
+      "yearBuilt": 1898,
+      "propertyType": "Co-op",
+      "status": "Active",
+      "listingAgent": "Jordan Liu",
+      "schoolRating": 8.2,
+      "notes": "Pet-friendly building. Renovated bath.",
+      "amenities": [
+        "Pet-friendly",
+        "Renovated bath",
+        "Laundry in building",
+        "Walk to F"
+      ],
+      "rooms": [
+        { "label": "Living", "detail": "Open living + dining" },
+        { "label": "Kitchen", "detail": "Galley; renovated 2022" },
+        { "label": "Bedrooms", "detail": "2 bedrooms + 1 bath" }
+      ]
+    },
+    {
+      "id": "HS-1008",
+      "address": "77 Berkeley Pl",
+      "neighborhood": "Park Slope",
+      "borough": "Brooklyn",
+      "beds": 4,
+      "baths": 3,
+      "sqft": 2100,
+      "price": 1875000,
+      "pricePerSqft": 893,
+      "yearBuilt": 1915,
+      "propertyType": "Brownstone",
+      "status": "Active",
+      "listingAgent": "Morgan Hayes",
+      "schoolRating": 8.4,
+      "notes": "Triplex; private outdoor space. Two-zone HVAC.",
+      "amenities": [
+        "Private outdoor",
+        "Two-zone HVAC",
+        "Wine cellar",
+        "Home office",
+        "Walk to Prospect Park"
+      ],
+      "rooms": [
+        { "label": "Parlor floor", "detail": "Living + dining + powder" },
+        { "label": "Garden level", "detail": "Family room + outdoor access" },
+        { "label": "Upper floors", "detail": "4 bedrooms + 3 baths + office" }
+      ]
+    },
+    {
+      "id": "HS-1009",
+      "address": "150 4th Ave",
+      "neighborhood": "Park Slope",
+      "borough": "Brooklyn",
+      "beds": 3,
+      "baths": 2,
+      "sqft": 1500,
+      "price": 1450000,
+      "pricePerSqft": 967,
+      "yearBuilt": 2018,
+      "propertyType": "Condo (new)",
+      "status": "Active",
+      "listingAgent": "Sam Patel",
+      "schoolRating": 8.4,
+      "notes": "New construction; common rooftop deck and gym.",
+      "amenities": [
+        "Rooftop deck",
+        "Gym",
+        "Cold storage",
+        "Floor-to-ceiling windows",
+        "EV charging"
+      ],
+      "rooms": [
+        { "label": "Living", "detail": "Open living + dining; balcony" },
+        { "label": "Kitchen", "detail": "Quartz island; gas range" },
+        { "label": "Bedrooms", "detail": "Primary + 2 bedrooms" }
+      ]
+    },
+    {
+      "id": "HS-1010",
+      "address": "612 Henry St",
+      "neighborhood": "Cobble Hill",
+      "borough": "Brooklyn",
+      "beds": 3,
+      "baths": 2,
+      "sqft": 1320,
+      "price": 1395000,
+      "pricePerSqft": 1057,
+      "yearBuilt": 1903,
+      "propertyType": "Townhouse",
+      "status": "Active",
+      "listingAgent": "Casey Reyes",
+      "schoolRating": 8.7,
+      "notes": "Period detail intact. Two parlors, eat-in kitchen.",
+      "amenities": [
+        "Original parquet",
+        "Two parlors",
+        "Eat-in kitchen",
+        "Wood-burning fireplace"
+      ],
+      "rooms": [
+        { "label": "Parlor", "detail": "Living + fireplace" },
+        { "label": "Kitchen", "detail": "Eat-in + pantry" },
+        { "label": "Upper", "detail": "3 bedrooms + 2 baths" }
+      ]
+    },
+    {
+      "id": "HS-1011",
+      "address": "38 Bergen St",
+      "neighborhood": "Boerum Hill",
+      "borough": "Brooklyn",
+      "beds": 3,
+      "baths": 2,
+      "sqft": 1410,
+      "price": 1395000,
+      "pricePerSqft": 989,
+      "yearBuilt": 1908,
+      "propertyType": "Brownstone",
+      "status": "Active",
+      "listingAgent": "Jordan Liu",
+      "schoolRating": 7.9,
+      "notes": "Just listed; expect activity. South-facing parlor.",
+      "amenities": [
+        "Just listed",
+        "South-facing parlor",
+        "Backyard",
+        "Walk to Atlantic Ave"
+      ],
+      "rooms": [
+        { "label": "Parlor", "detail": "Living + dining + powder" },
+        { "label": "Garden level", "detail": "Kitchen + family room" },
+        { "label": "Upper", "detail": "3 bedrooms + 2 baths" }
+      ]
+    },
+    {
+      "id": "HS-1012",
+      "address": "99 President St",
+      "neighborhood": "Carroll Gardens",
+      "borough": "Brooklyn",
+      "beds": 2,
+      "baths": 2,
+      "sqft": 1150,
+      "price": 1095000,
+      "pricePerSqft": 952,
+      "yearBuilt": 1920,
+      "propertyType": "Co-op",
+      "status": "Active",
+      "listingAgent": "Morgan Hayes",
+      "schoolRating": 8.2,
+      "notes": "Garden-level entry. Renovated 2021.",
+      "amenities": [
+        "Garden-level entry",
+        "Renovated 2021",
+        "Storage",
+        "Bike room"
+      ],
+      "rooms": [
+        { "label": "Living", "detail": "Open living + dining" },
+        { "label": "Kitchen", "detail": "Quartz + gas range" },
+        { "label": "Bedrooms", "detail": "2 bedrooms + 2 baths" }
+      ]
+    }
+  ],
+  "schoolsByNeighborhood": {
+    "Park Slope": [
+      { "name": "PS 321 William Penn", "level": "Elementary", "rating": 9.1, "distance": "0.3 mi" },
+      { "name": "MS 51 William Alexander", "level": "Middle", "rating": 8.6, "distance": "0.5 mi" },
+      { "name": "John Jay Educational Campus", "level": "High", "rating": 7.4, "distance": "0.8 mi" }
+    ],
+    "Boerum Hill": [
+      { "name": "PS 38 The Pacific", "level": "Elementary", "rating": 7.9, "distance": "0.4 mi" },
+      { "name": "Brooklyn School of Inquiry (G&T)", "level": "K-8", "rating": 9.2, "distance": "1.0 mi" }
+    ],
+    "Cobble Hill": [
+      { "name": "PS 29 John M. Harrigan", "level": "Elementary", "rating": 8.7, "distance": "0.3 mi" },
+      { "name": "MS 442 Carroll Gardens", "level": "Middle", "rating": 8.3, "distance": "0.4 mi" }
+    ],
+    "Carroll Gardens": [
+      { "name": "PS 58 The Carroll School", "level": "Elementary", "rating": 8.6, "distance": "0.3 mi" },
+      { "name": "MS 442 Carroll Gardens", "level": "Middle", "rating": 8.3, "distance": "0.4 mi" }
+    ]
+  },
+  "comps": {
+    "HS-1001": [
+      { "address": "47 Garfield Pl", "soldPrice": 1495000, "beds": 3, "baths": 2.5, "sqft": 1680, "soldDate": "2026-03", "pricePerSqft": 890 },
+      { "address": "512 9th St", "soldPrice": 1750000, "beds": 4, "baths": 2, "sqft": 1820, "soldDate": "2026-02", "pricePerSqft": 962 },
+      { "address": "77 Berkeley Pl", "soldPrice": 1875000, "beds": 4, "baths": 3, "sqft": 2100, "soldDate": "2025-12", "pricePerSqft": 893 },
+      { "address": "38 Bergen St", "soldPrice": 1395000, "beds": 3, "baths": 2, "sqft": 1410, "soldDate": "2025-11", "pricePerSqft": 989 }
+    ],
+    "HS-1002": [
+      { "address": "123 Maple St", "soldPrice": 1395000, "beds": 3, "baths": 2, "sqft": 1450, "soldDate": "2026-04", "pricePerSqft": 962 },
+      { "address": "512 9th St", "soldPrice": 1750000, "beds": 4, "baths": 2, "sqft": 1820, "soldDate": "2026-02", "pricePerSqft": 962 },
+      { "address": "77 Berkeley Pl", "soldPrice": 1875000, "beds": 4, "baths": 3, "sqft": 2100, "soldDate": "2025-12", "pricePerSqft": 893 }
+    ],
+    "HS-1004": [
+      { "address": "201 Smith St", "soldPrice": 895000, "beds": 2, "baths": 1, "sqft": 920, "soldDate": "2026-03", "pricePerSqft": 973 },
+      { "address": "99 President St", "soldPrice": 1095000, "beds": 2, "baths": 2, "sqft": 1150, "soldDate": "2026-01", "pricePerSqft": 952 }
+    ]
+  },
+  "tourSlots": {
+    "HS-1001": [
+      { "day": "Saturday", "time": "10:00 AM", "available": true },
+      { "day": "Saturday", "time": "12:00 PM", "available": false },
+      { "day": "Saturday", "time": "2:00 PM", "available": true },
+      { "day": "Saturday", "time": "4:00 PM", "available": true },
+      { "day": "Sunday", "time": "11:00 AM", "available": true },
+      { "day": "Sunday", "time": "1:00 PM", "available": false },
+      { "day": "Sunday", "time": "3:00 PM", "available": true }
+    ],
+    "HS-1002": [
+      { "day": "Saturday", "time": "12:00 PM", "available": true },
+      { "day": "Saturday", "time": "3:00 PM", "available": true },
+      { "day": "Sunday", "time": "1:00 PM", "available": true }
+    ],
+    "HS-1004": [
+      { "day": "Saturday", "time": "10:00 AM", "available": true },
+      { "day": "Saturday", "time": "3:00 PM", "available": true },
+      { "day": "Sunday", "time": "12:00 PM", "available": false }
+    ],
+    "HS-1009": [
+      { "day": "Saturday", "time": "11:00 AM", "available": true },
+      { "day": "Saturday", "time": "2:00 PM", "available": true },
+      { "day": "Sunday", "time": "10:00 AM", "available": true },
+      { "day": "Sunday", "time": "3:00 PM", "available": false }
+    ]
+  }
+}

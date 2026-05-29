@@ -27,6 +27,35 @@ import { z } from "zod";
 const DynString = z.union([z.string(), z.object({ path: z.string() })]);
 
 /**
+ * Dynamic enum factory: like `DynString`, but for fields that should be a
+ * literal value drawn from a fixed set OR a data-model path binding.
+ *
+ * Why this exists (the {path} crash story): the A2UI GenericBinder's
+ * `scrapeSchemaBehavior` only recognizes a prop as DYNAMIC (= reactively
+ * resolved against the data model) when its Zod schema is a `ZodUnion`
+ * containing an object with a `path` field but NO `componentId` field
+ * (see `@a2ui/web_core/src/v0_9/rendering/generic-binder.js`).
+ *
+ * A bare `z.enum([...])` is a ZodEnum, which `scrapeSchemaBehavior` does
+ * not recognize, so the binder falls back to `STATIC` behavior and passes
+ * the raw value through unchanged. If the JSON template binds the field
+ * via `{ path: "..." }` (which the canonical fixture does for `risk`,
+ * `tone`, `severity`), the renderer receives `{ path: "risk" }` as a
+ * literal object instead of the resolved enum string — and rendering
+ * it directly (e.g. `{risk}` in JSX) blows up with "Objects are not
+ * valid as a React child (found: object with keys {path})".
+ *
+ * Wrapping the enum in a union with `z.object({ path: z.string() })`
+ * trips `isDynamic` in `scrapeSchemaBehavior` and the binder resolves
+ * the binding to its bound string value at render time. The renderer
+ * defensively coerces with `asEnum(...)` as a belt-and-braces guard
+ * against stale or malformed bindings.
+ */
+function DynEnum<U extends string, T extends Readonly<[U, ...U[]]>>(values: T) {
+  return z.union([z.enum(values), z.object({ path: z.string() })]);
+}
+
+/**
  * Action union: lets the agent declare a named event that the renderer
  * dispatches on user interaction (e.g. Accept / Reject button click).
  * Pattern lifted from
@@ -71,7 +100,9 @@ export const legalPaperCatalogDefinitions = {
     props: z.object({
       headline: DynString,
       summary: DynString.optional(),
-      tone: z.enum(["positive", "neutral", "negative"]).optional(),
+      // DynEnum (not bare z.enum) so the binder treats `{ path: ... }`
+      // bindings as DYNAMIC. See DynEnum docstring above for why.
+      tone: DynEnum(["positive", "neutral", "negative"]).optional(),
     }),
   },
 
@@ -84,11 +115,32 @@ export const legalPaperCatalogDefinitions = {
       // CRITICAL: must be DynString. Declaring this as z.string() breaks
       // the redline round-trip per the plan's §4.2 anti-pattern callout.
       body: DynString,
-      risk: z.enum(["none", "low", "medium", "high", "critical"]).optional(),
-      // ComponentId for an optional MarginNote rendered in the right margin.
-      marginChild: z.string().optional(),
-      // ComponentId list for Redline rows rendered under the body.
-      redlineChildren: z.array(z.string()).optional(),
+      // DynEnum so a `{ path: "risk" }` binding resolves to "low" / "high"
+      // / etc. at render time instead of being passed through as a raw
+      // object. Bare `z.enum(...)` would crash the renderer when the
+      // fixture binds `risk` via path. See DynEnum docstring above.
+      risk: DynEnum(["none", "low", "medium", "high", "critical"]).optional(),
+      // Either a literal MarginNote ComponentId OR a `{ componentId, path }`
+      // template binding. The GenericBinder resolves the template into the
+      // actual child reference at render time; the renderer handles both
+      // shapes defensively.
+      marginChild: z
+        .union([
+          z.string(),
+          z.object({ componentId: z.string(), path: z.string() }),
+        ])
+        .optional(),
+      // Either a literal ComponentId list OR a `{ componentId, path }`
+      // template binding. Same union as Row/Column children — required for
+      // GenericBinder to treat this as a template-bound child collection
+      // (so the agent can vary the redline count via `update_data_model`
+      // without resending `update_components`).
+      redlineChildren: z
+        .union([
+          z.array(z.string()),
+          z.object({ componentId: z.string(), path: z.string() }),
+        ])
+        .optional(),
     }),
   },
 
@@ -111,7 +163,13 @@ export const legalPaperCatalogDefinitions = {
       "Right-margin annotation attached to a Clause. `severity` colors the bullet (info / warning / critical). `citation` is an optional ComponentId for an inline Citation rendered beneath the note body.",
     props: z.object({
       body: DynString,
-      severity: z.enum(["info", "warning", "critical"]),
+      // DynEnum so the canonical `{ path: "severity" }` binding resolves
+      // reactively rather than being passed through as a raw object. The
+      // renderer uses `severity` as an HTML data-attribute (which would
+      // stringify to "[object Object]" rather than crashing) and as an
+      // aria-label lookup key, but the binder behavior should still be
+      // DYNAMIC so the value is the actual enum string at render time.
+      severity: DynEnum(["info", "warning", "critical"]),
       citation: z.string().optional(),
     }),
   },
@@ -130,7 +188,11 @@ export const legalPaperCatalogDefinitions = {
     description:
       "Severity tag rendered inline (e.g. next to a clause heading). `aria-label` always spells out the severity so screen readers don't rely on color.",
     props: z.object({
-      level: z.enum(["low", "medium", "high", "critical"]),
+      // DynEnum for consistency with Clause.risk / Verdict.tone /
+      // MarginNote.severity — keeps the catalog's enum-bindable pattern
+      // uniform so future widgets can `{ path: ... }`-bind level without
+      // surprises.
+      level: DynEnum(["low", "medium", "high", "critical"]),
       label: DynString.optional(),
     }),
   },

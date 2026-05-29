@@ -1,0 +1,11 @@
+{
+  "python_version": "3.12",
+  "dockerfile_lines": [],
+  "dependencies": ["."],
+  "package_manager": "uv",
+  "graphs": {
+    "realestate_agent": "./realestate_agent/graph.py:graph"
+  },
+  "env": "../../../.env",
+  "_note": "Standalone langgraph.json for the Homestead realestate example. The dir name `realestate_agent/` matches the package name, so this entry uses canonical package-relative imports (`from .tools import ...` inside graph.py) — no sys.path hacks needed. This file is NOT used by the project-root `pnpm dev` flow today; the main `agent/langgraph.json` owns dev-server graph registration. It IS used by the per-example smoke probe (scripts/_smoke-examples.ts) and by the standalone Dockerfile (../Dockerfile)."
+}

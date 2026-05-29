@@ -1,0 +1,169 @@
+{
+  "name": "itinerary-timeline-nyc-3day-art",
+  "description": "TripWeaver fixed-schema scenario: 3-day NYC itinerary with an art-museum focus (MoMA, Met, Whitney).",
+  "surfaceId": "itinerary-timeline",
+  "catalogId": "copilotkit://travel-catalog",
+  "components": [
+    {
+      "id": "root",
+      "component": "TravelSurface",
+      "headline": "Your itinerary",
+      "sub": "Demo data — synthetic plan, not bookable.",
+      "children": ["itinerary-timeline"]
+    },
+    {
+      "id": "itinerary-timeline",
+      "component": "ItineraryTimeline",
+      "destination": { "path": "/destination" },
+      "days": { "path": "/days" },
+      "children": { "componentId": "itinerary-day-item", "path": "/plan" }
+    },
+    {
+      "id": "itinerary-day-item",
+      "component": "ItineraryDay",
+      "day": { "path": "day" },
+      "title": { "path": "title" },
+      "children": { "componentId": "itinerary-item", "path": "items" }
+    },
+    {
+      "id": "itinerary-item",
+      "component": "ItineraryItem",
+      "time": { "path": "time" },
+      "title": { "path": "title" },
+      "location": { "path": "location" },
+      "category": { "path": "category" }
+    }
+  ],
+  "data": {
+    "destination": "NYC",
+    "days": "3",
+    "plan": [
+      {
+        "id": "day-1",
+        "day": "Day 1",
+        "title": "Midtown landmarks + MoMA",
+        "items": [
+          {
+            "id": "d1-1",
+            "time": "09:00",
+            "title": "Coffee at Sant Ambroeus",
+            "location": "70th & Madison",
+            "category": "food"
+          },
+          {
+            "id": "d1-2",
+            "time": "10:30",
+            "title": "Museum of Modern Art (MoMA)",
+            "location": "11 W 53rd St",
+            "category": "museum"
+          },
+          {
+            "id": "d1-3",
+            "time": "13:30",
+            "title": "Lunch at The Modern (MoMA cafe)",
+            "location": "9 W 53rd St",
+            "category": "food"
+          },
+          {
+            "id": "d1-4",
+            "time": "15:00",
+            "title": "Walk to Bryant Park",
+            "location": "5th & 42nd",
+            "category": "experience"
+          },
+          {
+            "id": "d1-5",
+            "time": "19:30",
+            "title": "Dinner: Keens Steakhouse",
+            "location": "72 W 36th St",
+            "category": "food"
+          }
+        ]
+      },
+      {
+        "id": "day-2",
+        "day": "Day 2",
+        "title": "Met Museum + Central Park stroll",
+        "items": [
+          {
+            "id": "d2-1",
+            "time": "09:30",
+            "title": "Subway uptown (4/5/6 to 86th)",
+            "location": "Subway",
+            "category": "transit"
+          },
+          {
+            "id": "d2-2",
+            "time": "10:00",
+            "title": "The Metropolitan Museum of Art",
+            "location": "1000 5th Ave",
+            "category": "museum"
+          },
+          {
+            "id": "d2-3",
+            "time": "13:00",
+            "title": "Lunch: Cafe Sabarsky",
+            "location": "1048 5th Ave",
+            "category": "food"
+          },
+          {
+            "id": "d2-4",
+            "time": "14:30",
+            "title": "Central Park: the Ramble + Bow Bridge",
+            "location": "Central Park",
+            "category": "experience"
+          },
+          {
+            "id": "d2-5",
+            "time": "19:00",
+            "title": "Dinner: Via Carota",
+            "location": "51 Grove St",
+            "category": "food"
+          }
+        ]
+      },
+      {
+        "id": "day-3",
+        "day": "Day 3",
+        "title": "Whitney + High Line + farewell drinks",
+        "items": [
+          {
+            "id": "d3-1",
+            "time": "10:00",
+            "title": "Whitney Museum of American Art",
+            "location": "99 Gansevoort St",
+            "category": "museum"
+          },
+          {
+            "id": "d3-2",
+            "time": "12:30",
+            "title": "High Line walk (Gansevoort → 30th)",
+            "location": "Chelsea / Meatpacking",
+            "category": "experience"
+          },
+          {
+            "id": "d3-3",
+            "time": "13:30",
+            "title": "Lunch: Los Tacos No. 1 (Chelsea Mkt)",
+            "location": "Chelsea Market",
+            "category": "food"
+          },
+          {
+            "id": "d3-4",
+            "time": "16:00",
+            "title": "Rest stop at hotel",
+            "location": "Hotel",
+            "category": "rest"
+          },
+          {
+            "id": "d3-5",
+            "time": "19:30",
+            "title": "Farewell cocktails: Bemelmans Bar",
+            "location": "35 E 76th St",
+            "category": "food"
+          }
+        ]
+      }
+    ]
+  }
+}
