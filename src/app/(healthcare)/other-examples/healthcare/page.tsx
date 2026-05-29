@@ -235,7 +235,14 @@ function HealthcareCanvas() {
 }
 
 export default function HealthcareRoundsPage() {
-  useAutoShowRoster();
+  // Auto-prompt disabled (2026-05-29). The useAutoShowRoster hook races the
+  // CopilotKit/LangGraph adapter — its addMessage+runAgent call lands at a
+  // moment when the runtime's message map isn't fully populated, so a
+  // subsequent user-typed prompt errors with INCOMPLETE_STREAM: Message not
+  // found. Travel has no auto-prompt and works end-to-end; healthcare/edtech/
+  // legal/realestate all do and all fail until this is removed. See PR #55
+  // E2E findings.
+  // useAutoShowRoster();
 
   return (
     <div className="roundsai-root">

@@ -311,7 +311,10 @@ function EmptyHero({ isRunning }: { isRunning: boolean }) {
 }
 
 export default function HomesteadPage() {
-  useAutoSearch();
+  // Auto-prompt disabled (2026-05-29) — see healthcare page.tsx for rationale.
+  // The useAutoSearch hook races CopilotKit's runtime message map, causing
+  // INCOMPLETE_STREAM: Message not found on subsequent user prompts.
+  // useAutoSearch();
 
   // Header state.
   const [savedCount] = useState(2); // synthetic — heart-button is decorative

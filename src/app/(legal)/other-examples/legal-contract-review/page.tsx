@@ -124,7 +124,8 @@ function LegalCanvas() {
 }
 
 export default function LegalContractReviewPage() {
-  useAutoReviewNda();
+  // Auto-prompt disabled (2026-05-29) — see healthcare page.tsx for rationale.
+  // useAutoReviewNda();
 
   // Suggestion chip — gives the user an obvious "try this" entry point if the
   // auto-load doesn't kick in (or if they want to try the SaaS sample too).

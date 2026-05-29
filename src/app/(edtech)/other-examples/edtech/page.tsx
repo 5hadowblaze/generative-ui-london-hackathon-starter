@@ -331,7 +331,8 @@ function SurfacePlaceholder() {
 }
 
 export default function EdtechPage() {
-  useAutoOpenRoster();
+  // Auto-prompt disabled (2026-05-29) — see healthcare page.tsx for rationale.
+  // useAutoOpenRoster();
 
   const [courseFilter, setCourseFilter] = useState<string | null>(null);
   const [advisorFilter, setAdvisorFilter] = useState<string | null>(null);
