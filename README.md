@@ -89,7 +89,7 @@ The agent emits A2UI v0.9 envelopes (`createSurface`, `updateComponents`, `updat
 
 ## Submitting your demo
 
-See [SUBMITTING.md](SUBMITTING.md). (Submission flow confirmed by event-ops.)
+See [SUBMITTING.md](SUBMITTING.md).
 
 ## Troubleshooting
 
