@@ -12,7 +12,7 @@ The default LLM is **Gemini 2.5 Flash** via Google's OpenAI-compatible endpoint 
 
 ```bash
 git clone <your-fork-url>
-cd london-a2ui-hackathon
+cd agent-interop-london-hackathon-starter
 pnpm install              # also installs the Python agent via uv sync
 
 cp .env.example .env
