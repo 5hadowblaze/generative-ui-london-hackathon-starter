@@ -30,6 +30,9 @@ other-examples/<example-id>/
 | Example                                              | Status | Catalog                              | What it shows                                                                          |
 | ---------------------------------------------------- | ------ | ------------------------------------ | -------------------------------------------------------------------------------------- |
 | [legal-contract-review/](./legal-contract-review/)   | wip    | `copilotkit://legal-paper-catalog`   | Paper-styled contract review with margin notes + redlines on a second registered catalog. |
+| [healthcare/](./healthcare/)                         | wip    | `copilotkit://healthcare-catalog`    | RoundsAI ward-rounds copilot — clinical teal split-pane with patient roster, vitals chart, and shift-handoff drafts. |
+| [travel/](./travel/)                                 | wip    | `copilotkit://travel-catalog`        | TripWeaver trip-planning copilot — sky/coral scroll-stack with flight + hotel cards and a day-by-day itinerary timeline. |
+| [realestate/](./realestate/)                         | wip    | `copilotkit://realestate-catalog`    | Homestead buyer's-agent copilot — warm-neutral magazine-style with listing grid, photo carousel, tour slot picker, and offer-letter drafts. |
 | [edtech/](./edtech/)                                 | wip    | `copilotkit://edtech-catalog`        | ScholarAI students-at-risk advisor copilot — navy/gold/cream dashboard with grade history, assignment table, and parent-outreach drafts. |
 
 ## How to add another
