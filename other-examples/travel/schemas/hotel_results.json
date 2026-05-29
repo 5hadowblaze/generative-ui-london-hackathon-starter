@@ -1,0 +1,28 @@
+[
+  {
+    "id": "root",
+    "component": "TravelSurface",
+    "headline": "Hotels",
+    "sub": "Demo data — synthetic prices, not bookable.",
+    "children": { "componentId": "hotel-card-item", "path": "/hotels" }
+  },
+  {
+    "id": "hotel-card-item",
+    "component": "HotelCard",
+    "name": { "path": "name" },
+    "imageUrl": { "path": "imageUrl" },
+    "neighborhood": { "path": "neighborhood" },
+    "rating": { "path": "rating" },
+    "nightlyRate": { "path": "nightlyRate" },
+    "action": {
+      "event": {
+        "name": "select_hotel",
+        "context": {
+          "hotelId": { "path": "id" },
+          "name": { "path": "name" },
+          "nightlyRate": { "path": "nightlyRate" }
+        }
+      }
+    }
+  }
+]

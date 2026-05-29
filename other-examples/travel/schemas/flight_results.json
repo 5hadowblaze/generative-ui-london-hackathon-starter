@@ -1,0 +1,34 @@
+[
+  {
+    "id": "root",
+    "component": "TravelSurface",
+    "headline": "Flights",
+    "sub": "Demo data — synthetic prices, not bookable.",
+    "children": { "componentId": "flight-card-item", "path": "/flights" }
+  },
+  {
+    "id": "flight-card-item",
+    "component": "FlightCard",
+    "airline": { "path": "airline" },
+    "airlineLogo": { "path": "airlineLogo" },
+    "flightNumber": { "path": "flightNumber" },
+    "origin": { "path": "origin" },
+    "destination": { "path": "destination" },
+    "date": { "path": "date" },
+    "departTime": { "path": "departTime" },
+    "arriveTime": { "path": "arriveTime" },
+    "duration": { "path": "duration" },
+    "stops": { "path": "stops" },
+    "price": { "path": "price" },
+    "action": {
+      "event": {
+        "name": "select_flight",
+        "context": {
+          "flightId": { "path": "id" },
+          "airline": { "path": "airline" },
+          "price": { "path": "price" }
+        }
+      }
+    }
+  }
+]

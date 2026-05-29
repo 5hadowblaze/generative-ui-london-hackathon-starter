@@ -1,0 +1,16 @@
+{
+  "id": "travel",
+  "name": "TripWeaver",
+  "description": "A trip-planning copilot: chat for flights, hotels, and a day-by-day itinerary on a sky+coral travel surface.",
+  "route": "/other-examples/travel",
+  "graphId": "travel_agent",
+  "agentName": "travel",
+  "catalogId": "copilotkit://travel-catalog",
+  "screenshot": "screenshot.png",
+  "tags": [
+    "travel",
+    "trip-planning",
+    "scroll-stack"
+  ],
+  "status": "wip"
+}

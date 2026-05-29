@@ -1,0 +1,88 @@
+{
+  "name": "flight-results-lhr-jfk",
+  "description": "TripWeaver fixed-schema scenario: search_flights returns 3 LHR→JFK flights under $700 next Wednesday.",
+  "surfaceId": "flight-results",
+  "catalogId": "copilotkit://travel-catalog",
+  "components": [
+    {
+      "id": "root",
+      "component": "TravelSurface",
+      "headline": "Flights",
+      "sub": "Demo data — synthetic prices, not bookable.",
+      "children": { "componentId": "flight-card-item", "path": "/flights" }
+    },
+    {
+      "id": "flight-card-item",
+      "component": "FlightCard",
+      "airline": { "path": "airline" },
+      "airlineLogo": { "path": "airlineLogo" },
+      "flightNumber": { "path": "flightNumber" },
+      "origin": { "path": "origin" },
+      "destination": { "path": "destination" },
+      "date": { "path": "date" },
+      "departTime": { "path": "departTime" },
+      "arriveTime": { "path": "arriveTime" },
+      "duration": { "path": "duration" },
+      "stops": { "path": "stops" },
+      "price": { "path": "price" },
+      "action": {
+        "event": {
+          "name": "select_flight",
+          "context": {
+            "flightId": { "path": "id" },
+            "airline": { "path": "airline" },
+            "price": { "path": "price" }
+          }
+        }
+      }
+    }
+  ],
+  "data": {
+    "origin": "LHR",
+    "destination": "JFK",
+    "flights": [
+      {
+        "id": "fl-001",
+        "airline": "British Airways",
+        "airlineLogo": "https://www.google.com/s2/favicons?domain=britishairways.com&sz=128",
+        "flightNumber": "BA 175",
+        "origin": "LHR",
+        "destination": "JFK",
+        "date": "Wed, Mar 18",
+        "departTime": "10:25",
+        "arriveTime": "13:30",
+        "duration": "8h 05m",
+        "stops": "Nonstop",
+        "price": "$642"
+      },
+      {
+        "id": "fl-002",
+        "airline": "Virgin Atlantic",
+        "airlineLogo": "https://www.google.com/s2/favicons?domain=virginatlantic.com&sz=128",
+        "flightNumber": "VS 3",
+        "origin": "LHR",
+        "destination": "JFK",
+        "date": "Wed, Mar 18",
+        "departTime": "11:00",
+        "arriveTime": "14:10",
+        "duration": "8h 10m",
+        "stops": "Nonstop",
+        "price": "$689"
+      },
+      {
+        "id": "fl-003",
+        "airline": "Delta",
+        "airlineLogo": "https://www.google.com/s2/favicons?domain=delta.com&sz=128",
+        "flightNumber": "DL 4",
+        "origin": "LHR",
+        "destination": "JFK",
+        "date": "Wed, Mar 18",
+        "departTime": "08:35",
+        "arriveTime": "11:55",
+        "duration": "8h 20m",
+        "stops": "Nonstop",
+        "price": "$598"
+      }
+    ]
+  }
+}

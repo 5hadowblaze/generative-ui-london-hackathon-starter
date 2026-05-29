@@ -69,6 +69,22 @@ const realestateAgent = new LangGraphAgent({
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TripWeaver / Travel agent (graph: travel_agent)
+//
+// Powers the /other-examples/travel surface. Same dev-server pattern
+// as the siblings above — canonical langgraph.json entry lives in
+// `other-examples/travel/agent/langgraph.json`.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const travelAgent = new LangGraphAgent({
+  deploymentUrl:
+    process.env.AGENT_URL ||
+    process.env.LANGGRAPH_DEPLOYMENT_URL ||
+    "http://localhost:8123",
+  graphId: "travel_agent",
+  langsmithApiKey: process.env.LANGSMITH_API_KEY || "",
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CUSTOMIZATION SEAM #6 — Optional A2A bolt-on (Track 1 interop)
 //
 // Dormant unless A2A_AGENT_URL is set. When set, wraps the LangGraph
@@ -115,6 +131,7 @@ const runtime = new CopilotRuntime({
     legal: legalAgent,
     healthcare: healthcareAgent,
     realestate: realestateAgent,
+    travel: travelAgent,
   },
   runner: new InMemoryAgentRunner(),
   openGenerativeUI: true,
