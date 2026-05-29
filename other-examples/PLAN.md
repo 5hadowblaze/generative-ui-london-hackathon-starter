@@ -27,7 +27,7 @@ found that:
 - [ ] **2.** Wire example LangGraph agents into `pnpm dev`. Currently
       only `sample_agent` boots; `legal_review_agent` is commented out
       in `agent/langgraph.json` with a `_note` field.
-- [ ] **3.** Add a smoke check that boots each example's graph (in
+- [x] **3.** Add a smoke check that boots each example's graph (in
       `scripts/smoke.ts`) so we catch broken examples in CI.
 - [ ] **4.** Build `pnpm new-example <name>` as a real scaffolder from
       `legal-contract-review/` (mirrors the existing `pnpm new-widget`
