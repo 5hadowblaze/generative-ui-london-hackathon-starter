@@ -76,7 +76,7 @@ const ActionSchema = z
 export const legalPaperCatalogDefinitions = {
   LegalDocumentShell: {
     description:
-      "Root paper container for a legal document. Renders a warm off-white paper background with a hard-coded 'Demo only — not legal advice.' disclaimer strip at the top. Slots an optional `verdictChild` (typically a Verdict component ID) above the clause body, then iterates `children` as the clause body. Apply at the root of any legal-paper surface.",
+      "Root paper container for a legal document. Renders a warm off-white paper background. Slots an optional `verdictChild` (typically a Verdict component ID) above the clause body, then iterates `children` as the clause body. Apply at the root of any legal-paper surface.",
     props: z.object({
       title: DynString,
       // parties is not a template-bound child collection — it's a flat

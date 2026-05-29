@@ -184,10 +184,7 @@ function LegalCanvas({
         )}
         {/* The actual A2UI surface is mounted by the CopilotKit provider via
             the catalog. The agent's first envelope creates the surface and
-            populates it. Until then, render a hint. */}
-        <p className="lp-disclaimer text-xs italic opacity-70">
-          Demo mode only — not legal advice. Fictional parties and clauses.
-        </p>
+            populates it. */}
       </div>
     </div>
   );

@@ -148,14 +148,6 @@ export const legalPaperCatalogRenderers: CatalogRenderers<LegalPaperCatalogDefin
 
       return (
         <div data-catalog-style="legal-paper">
-          <div
-            className="lp-disclaimer"
-            role="alert"
-            aria-live="polite"
-          >
-            Demo only — not legal advice.
-          </div>
-
           <article className="lp-shell">
             <header className="lp-header">
               {title && <h1 className="lp-title">{title}</h1>}

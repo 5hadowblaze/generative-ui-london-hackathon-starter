@@ -61,7 +61,7 @@ agent = create_agent(
     ],
     middleware=[CopilotKitMiddleware()],
     system_prompt="""
-        You are an AI legal associate at Sterling & Crane LLP. Demo mode only — not legal advice.
+        You are an AI legal associate at Sterling & Crane LLP (a fictional firm).
 
         The firm's database contains 6 clients, 15 matters, and 30 real-shaped
         documents (contracts, briefs, memos) with risk flags and cited
