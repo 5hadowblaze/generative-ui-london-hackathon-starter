@@ -177,8 +177,10 @@ disappears — zero cost if you're not using Track 1.
 
 ## If you get rate-limited
 
-The default LLM is **Gemini 2.5 Flash** via Google's OpenAI-compatible
-endpoint. From the empirical load test in `FROZEN.md`:
+The default LLM is **Gemini 3.5 Flash** via the native Google Gen AI SDK
+(`langchain-google-genai`). The empirical load test in `FROZEN.md` measured
+the OpenAI-compat fallback path on `gemini-2.5-flash`, but the headroom
+shape is similar:
 
 - Single key, 30 concurrent agentic requests: 30/30 succeed, p95 ~2s.
 - Single key, 100 concurrent: 100/100 succeed, p95 ~2.3s.
