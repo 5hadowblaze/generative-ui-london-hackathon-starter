@@ -1,0 +1,59 @@
+{
+  "name": "offer_letter_draft_park_slope",
+  "description": "Canonical realestate-catalog scenario: draft_offer_letter returns a draft offer of $1.4M on 123 Maple St (96.1% of asking).",
+  "surfaceId": "realestate-offer-letter",
+  "catalogId": "copilotkit://realestate-catalog",
+  "components": [
+    {
+      "id": "root",
+      "component": "OfferLetterDraft",
+      "address": { "path": "/listing/address" },
+      "neighborhood": { "path": "/listing/neighborhood" },
+      "askingPrice": { "path": "/listing/askingPrice" },
+      "offerAmount": { "path": "/offer/amount" },
+      "pctOfAsking": { "path": "/offer/pctOfAsking" },
+      "letter": { "path": "/letter" },
+      "sendAction": {
+        "event": {
+          "name": "send_offer",
+          "context": {
+            "listingId": { "path": "/listing/id" },
+            "offerAmount": { "path": "/offer/amount" },
+            "pctOfAsking": { "path": "/offer/pctOfAsking" }
+          }
+        }
+      },
+      "reviseAction": {
+        "event": {
+          "name": "revise_offer",
+          "context": {
+            "listingId": { "path": "/listing/id" },
+            "offerAmount": { "path": "/offer/amount" }
+          }
+        }
+      },
+      "cancelAction": {
+        "event": {
+          "name": "cancel_offer",
+          "context": {
+            "listingId": { "path": "/listing/id" }
+          }
+        }
+      }
+    }
+  ],
+  "data": {
+    "listing": {
+      "id": "HS-1001",
+      "address": "123 Maple St",
+      "neighborhood": "Park Slope",
+      "askingPrice": "$1,395,000"
+    },
+    "offer": {
+      "amount": "$1,400,000",
+      "amountRaw": 1400000,
+      "pctOfAsking": "100.4%"
+    },
+    "letter": "Dear seller,\n\nOn behalf of my client, I am pleased to submit an offer of $1,400,000 for 123 Maple St in Park Slope, Brooklyn.\n\nThis offer represents 100.4% of the asking price of $1,395,000. My client is a qualified buyer with pre-approval in hand and a flexible close.\n\nTerms:\n  - All-cash to $1,400,000\n  - Standard contingencies (inspection, financing, title)\n  - 45-day close, flexible on rent-back\n\nWe are excited about this home and would welcome the opportunity to discuss any seller priorities. Looking forward to next steps.\n\nWarmly,\nHomestead Buyer's Agent"
+  }
+}

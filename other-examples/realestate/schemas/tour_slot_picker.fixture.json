@@ -1,0 +1,48 @@
+{
+  "name": "tour_slot_picker_saturday",
+  "description": "Canonical realestate-catalog scenario: pick_tour_slot returns Saturday/Sunday availability for 123 Maple St.",
+  "surfaceId": "realestate-tour-slots",
+  "catalogId": "copilotkit://realestate-catalog",
+  "components": [
+    {
+      "id": "root",
+      "component": "TourSlotPicker",
+      "address": { "path": "/listing/address" },
+      "neighborhood": { "path": "/listing/neighborhood" },
+      "slotsChildren": { "componentId": "tour-slot", "path": "/slots" }
+    },
+    {
+      "id": "tour-slot",
+      "component": "TourSlot",
+      "day": { "path": "day" },
+      "time": { "path": "time" },
+      "available": { "path": "available" },
+      "action": {
+        "event": {
+          "name": "tour_slot_selected",
+          "context": {
+            "listingId": { "path": "listingId" },
+            "day": { "path": "day" },
+            "time": { "path": "time" }
+          }
+        }
+      }
+    }
+  ],
+  "data": {
+    "listing": {
+      "id": "HS-1001",
+      "address": "123 Maple St",
+      "neighborhood": "Park Slope"
+    },
+    "slots": [
+      { "id": "slot-0", "day": "Saturday", "time": "10:00 AM", "available": "true", "listingId": "HS-1001" },
+      { "id": "slot-1", "day": "Saturday", "time": "12:00 PM", "available": "false", "listingId": "HS-1001" },
+      { "id": "slot-2", "day": "Saturday", "time": "2:00 PM", "available": "true", "listingId": "HS-1001" },
+      { "id": "slot-3", "day": "Saturday", "time": "4:00 PM", "available": "true", "listingId": "HS-1001" },
+      { "id": "slot-4", "day": "Sunday", "time": "11:00 AM", "available": "true", "listingId": "HS-1001" },
+      { "id": "slot-5", "day": "Sunday", "time": "1:00 PM", "available": "false", "listingId": "HS-1001" },
+      { "id": "slot-6", "day": "Sunday", "time": "3:00 PM", "available": "true", "listingId": "HS-1001" }
+    ]
+  }
+}

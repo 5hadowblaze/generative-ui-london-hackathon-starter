@@ -52,6 +52,23 @@ const healthcareAgent = new LangGraphAgent({
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Homestead realestate agent (graph: realestate_agent)
+//
+// Sibling agent that powers the /other-examples/realestate surface.
+// Same dev-server pattern as the healthcare entry above — canonical
+// langgraph.json entry lives in
+// `other-examples/realestate/agent/langgraph.json`.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const realestateAgent = new LangGraphAgent({
+  deploymentUrl:
+    process.env.AGENT_URL ||
+    process.env.LANGGRAPH_DEPLOYMENT_URL ||
+    "http://localhost:8123",
+  graphId: "realestate_agent",
+  langsmithApiKey: process.env.LANGSMITH_API_KEY || "",
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CUSTOMIZATION SEAM #6 — Optional A2A bolt-on (Track 1 interop)
 //
 // Dormant unless A2A_AGENT_URL is set. When set, wraps the LangGraph
@@ -97,6 +114,7 @@ const runtime = new CopilotRuntime({
     default: orchestrationAgent,
     legal: legalAgent,
     healthcare: healthcareAgent,
+    realestate: realestateAgent,
   },
   runner: new InMemoryAgentRunner(),
   openGenerativeUI: true,

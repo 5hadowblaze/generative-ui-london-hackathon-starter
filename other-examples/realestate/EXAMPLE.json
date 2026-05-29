@@ -1,0 +1,11 @@
+{
+  "id": "realestate",
+  "name": "Homestead — Buyer's Agent",
+  "description": "Magazine-style buyer's-agent copilot for synthetic Brooklyn inventory. Surfaces listing grids, full property details with comps + schools, a tour-slot picker, and an editable offer-letter draft.",
+  "route": "/other-examples/realestate",
+  "graphId": "realestate_agent",
+  "agentName": "realestate",
+  "catalogId": "copilotkit://realestate-catalog",
+  "tags": ["realestate", "buyers-agent", "magazine"],
+  "status": "wip"
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "root",
+    "component": "TourSlotPicker",
+    "address": { "path": "/listing/address" },
+    "neighborhood": { "path": "/listing/neighborhood" },
+    "slotsChildren": { "componentId": "tour-slot", "path": "/slots" }
+  },
+  {
+    "id": "tour-slot",
+    "component": "TourSlot",
+    "day": { "path": "day" },
+    "time": { "path": "time" },
+    "available": { "path": "available" },
+    "action": {
+      "event": {
+        "name": "tour_slot_selected",
+        "context": {
+          "listingId": { "path": "listingId" },
+          "day": { "path": "day" },
+          "time": { "path": "time" }
+        }
+      }
+    }
+  }
+]

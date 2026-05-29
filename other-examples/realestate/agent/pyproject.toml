@@ -1,0 +1,28 @@
+[project]
+name = "realestate-agent"
+version = "0.1.0"
+description = "LangGraph agent for the Homestead realestate buyer's-agent example."
+requires-python = ">=3.12"
+
+# The example's runtime deps are inherited from the parent agent venv
+# (see ../../../agent/pyproject.toml). We restate them here so the
+# `pnpm smoke` per-example probe sees a populated dependencies list
+# and so the standalone Dockerfile can build this example on its own.
+# Pins are intentionally loose — the parent venv supplies the exact
+# versions, and these markers serve as documentation + a smoke-probe
+# signal that the package isn't a placeholder.
+dependencies = [
+  "langchain>=1.2,<2",
+  "langgraph>=1.1,<2",
+  "langchain-google-genai>=4.2,<5",
+  "copilotkit>=0.1.87,<0.2",
+]
+
+# The Python package lives in the sibling `realestate_agent/` directory
+# (dir name matches the import name), so setuptools auto-discovery picks
+# it up with no package-dir remapping. langgraph loads the graph via
+# `./realestate_agent/graph.py:graph` (see langgraph.json), which keeps
+# Python's package machinery intact and removes the need for any
+# `sys.path.insert(...)` workaround in graph.py.
+[tool.setuptools]
+packages = ["realestate_agent"]

@@ -1,0 +1,912 @@
+/**
+ * Realestate Catalog — Scoped Theme
+ *
+ * Every rule in this file is scoped under `[data-catalog-style="realestate"]`
+ * so the dashboard demo's CSS variables (defined globally in
+ * `src/lib/a2ui-theme.css` and `src/app/globals.css`) are untouched.
+ *
+ * Visual identity:
+ *   - Warm taupe (#9d8765) + sage (#5b7849) + cream (#fbf7ec) + terracotta
+ *     (#c69e60). Dark mode is intentionally suppressed inside this surface
+ *     — the cream/paper-grain background is load-bearing for the magazine
+ *     affordance.
+ *   - Fraunces (display) for listing headlines + Inter (body) loaded in
+ *     the route shim via next/font/google. We rely on the `--re-font-display`
+ *     CSS variable so the route shim can swap fonts without touching this
+ *     file.
+ *   - Tabular numerals on every price / sqft / bed-count cell so columns
+ *     align in tables and totals don't jitter.
+ *   - Cards have a soft paper-grain background (SVG noise filter) and
+ *     lift-on-hover via a 200ms ease translation.
+ */
+
+[data-catalog-style="realestate"] {
+  /* ── Palette ────────────────────────────────────────────────── */
+  --re-cream: #fbf7ec;
+  --re-cream-deep: #f4ecd8;
+  --re-paper: #fffdf7;
+  --re-ink: #2a241c;
+  --re-ink-muted: #6a5b48;
+  --re-ink-faint: #9a8b78;
+
+  --re-taupe: #9d8765;
+  --re-taupe-deep: #6a5841;
+  --re-taupe-soft: #d0bf9c;
+  --re-taupe-pale: #ede1c6;
+
+  --re-sage: #5b7849;
+  --re-sage-soft: #b1c79c;
+  --re-sage-pale: #e2ecd5;
+
+  --re-terracotta: #c69e60;
+  --re-terracotta-deep: #a8814a;
+
+  --re-border: #d6c8a8;
+  --re-border-strong: #b9a173;
+  --re-border-faint: #ece2c9;
+
+  --re-shadow-card: 0 1px 2px rgba(42, 36, 28, 0.04),
+    0 6px 14px rgba(42, 36, 28, 0.06);
+  --re-shadow-card-hover: 0 4px 12px rgba(42, 36, 28, 0.06),
+    0 18px 30px rgba(42, 36, 28, 0.10);
+
+  --re-status-active: var(--re-sage);
+  --re-status-pending: var(--re-terracotta);
+  --re-status-sold: var(--re-taupe);
+
+  /* ── Typography ─────────────────────────────────────────────── */
+  /* Set by the route shim via next/font/google. We declare fallbacks
+     here so the catalog still renders if the shim hasn't loaded fonts. */
+  --re-font-display:
+    var(--font-fraunces, "Fraunces", "Cormorant Garamond", Georgia, serif);
+  --re-font-body:
+    var(--font-inter, "Inter", "SF Pro Text", -apple-system,
+      BlinkMacSystemFont, "Segoe UI", sans-serif);
+
+  font-family: var(--re-font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--re-ink);
+  background: var(--re-cream);
+  color-scheme: light;
+
+  /* Subtle paper grain — inline SVG, no external assets. */
+  background-image:
+    radial-gradient(rgba(157, 135, 101, 0.045) 1px, transparent 1px),
+    radial-gradient(rgba(106, 88, 65, 0.025) 1px, transparent 1px);
+  background-size: 4px 4px, 8px 8px;
+  background-position: 0 0, 2px 3px;
+}
+
+[data-catalog-style="realestate"] .re-surface {
+  font-family: var(--re-font-body);
+  color: var(--re-ink);
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 32px 56px;
+}
+
+/* Tabular numerals for prices, sqft, bed counts. */
+[data-catalog-style="realestate"] .re-tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* ── Eyebrow + headlines ──────────────────────────────────── */
+[data-catalog-style="realestate"] .re-grid-eyebrow {
+  font-family: var(--re-font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--re-taupe-deep);
+  margin: 0 0 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+[data-catalog-style="realestate"] .re-grid-headline {
+  font-family: var(--re-font-display);
+  font-weight: 600;
+  font-size: 1.9rem;
+  letter-spacing: -0.01em;
+  color: var(--re-ink);
+  margin: 0;
+}
+
+[data-catalog-style="realestate"] .re-grid-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--re-border-faint);
+}
+
+[data-catalog-style="realestate"] .re-section-headline {
+  font-family: var(--re-font-display);
+  font-weight: 600;
+  font-size: 1.25rem;
+  letter-spacing: -0.005em;
+  color: var(--re-ink);
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--re-border-faint);
+}
+
+[data-catalog-style="realestate"] .re-divider {
+  border: none;
+  border-top: 1px solid var(--re-border-faint);
+  margin: 4px 0;
+}
+
+/* ── Icons ─────────────────────────────────────────────────── */
+[data-catalog-style="realestate"] .re-icon {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.6;
+  color: var(--re-taupe-deep);
+}
+[data-catalog-style="realestate"] .re-icon-inline {
+  width: 12px;
+  height: 12px;
+  stroke-width: 1.6;
+  color: var(--re-taupe-deep);
+}
+[data-catalog-style="realestate"] .re-icon-tiny {
+  width: 11px;
+  height: 11px;
+  stroke-width: 1.8;
+  color: currentColor;
+}
+
+/* ── Status dots ────────────────────────────────────────────── */
+[data-catalog-style="realestate"] .re-status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--re-status-active);
+}
+[data-catalog-style="realestate"] .re-status-dot[data-status="pending"] {
+  background: var(--re-status-pending);
+}
+[data-catalog-style="realestate"] .re-status-dot[data-status="sold"] {
+  background: var(--re-status-sold);
+}
+[data-catalog-style="realestate"] .re-status-label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--re-ink-muted);
+}
+
+/* ── ListingGrid ──────────────────────────────────────────── */
+[data-catalog-style="realestate"] .re-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* ── ListingCard ──────────────────────────────────────────── */
+[data-catalog-style="realestate"] .re-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--re-paper);
+  border: 1px solid var(--re-sage-soft);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--re-shadow-card);
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+[data-catalog-style="realestate"] .re-card:hover,
+[data-catalog-style="realestate"] .re-card:focus-within {
+  transform: translateY(-4px);
+  box-shadow: var(--re-shadow-card-hover);
+  border-color: var(--re-sage);
+}
+
+[data-catalog-style="realestate"] .re-card-photo {
+  height: 140px;
+  background:
+    linear-gradient(
+      135deg,
+      var(--re-taupe-soft) 0%,
+      var(--re-cream-deep) 50%,
+      var(--re-sage-soft) 100%
+    );
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 12px 14px;
+  position: relative;
+}
+[data-catalog-style="realestate"] .re-card-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(rgba(255, 253, 247, 0.4) 1px, transparent 1.5px);
+  background-size: 6px 6px;
+  pointer-events: none;
+}
+[data-catalog-style="realestate"] .re-card-photo-type {
+  position: relative;
+  z-index: 1;
+  font-family: var(--re-font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--re-taupe-deep);
+  background: rgba(255, 253, 247, 0.7);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--re-border);
+}
+
+[data-catalog-style="realestate"] .re-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px 18px;
+  flex: 1;
+}
+
+[data-catalog-style="realestate"] .re-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+[data-catalog-style="realestate"] .re-card-address-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+[data-catalog-style="realestate"] .re-card-address {
+  font-family: var(--re-font-display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: -0.005em;
+  margin: 0;
+  color: var(--re-ink);
+}
+
+[data-catalog-style="realestate"] .re-card-neighborhood {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: var(--re-ink-muted);
+  margin: 0;
+}
+
+[data-catalog-style="realestate"] .re-card-price {
+  font-family: var(--re-font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--re-ink);
+  white-space: nowrap;
+}
+
+[data-catalog-style="realestate"] .re-card-stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+}
+[data-catalog-style="realestate"] .re-card-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--re-ink);
+}
+[data-catalog-style="realestate"] .re-stat-label {
+  font-weight: 400;
+  color: var(--re-ink-muted);
+  font-size: 0.78rem;
+}
+
+[data-catalog-style="realestate"] .re-card-ppsqft {
+  font-size: 0.78rem;
+  color: var(--re-ink-muted);
+  margin: 0;
+}
+
+[data-catalog-style="realestate"] .re-card-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--re-border-faint);
+}
+[data-catalog-style="realestate"] .re-card-footer-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── School pill ──────────────────────────────────────────── */
+[data-catalog-style="realestate"] .re-school-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--re-border-faint);
+  background: var(--re-sage-pale);
+  color: var(--re-sage);
+}
+[data-catalog-style="realestate"] .re-school-pill[data-tier="strong"] {
+  background: var(--re-sage-pale);
+  color: var(--re-sage);
+  border-color: var(--re-sage-soft);
+}
+[data-catalog-style="realestate"] .re-school-pill[data-tier="good"] {
+  background: #f7eed9;
+  color: var(--re-terracotta-deep);
+  border-color: #ead7a6;
+}
+[data-catalog-style="realestate"] .re-school-pill[data-tier="fair"] {
+  background: var(--re-taupe-pale);
+  color: var(--re-taupe-deep);
+  border-color: var(--re-border);
+}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+[data-catalog-style="realestate"] .re-button {
+  font-family: var(--re-font-body);
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 160ms ease, color 160ms ease,
+    border-color 160ms ease, transform 100ms ease;
+}
+[data-catalog-style="realestate"] .re-button:active {
+  transform: translateY(1px);
+}
+[data-catalog-style="realestate"] .re-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+[data-catalog-style="realestate"] .re-button-ghost {
+  background: transparent;
+  color: var(--re-sage);
+  border-color: var(--re-sage-soft);
+}
+[data-catalog-style="realestate"] .re-button-ghost:hover {
+  background: var(--re-sage-pale);
+  border-color: var(--re-sage);
+}
+[data-catalog-style="realestate"] .re-button-primary {
+  background: var(--re-sage);
+  color: #fff;
+  border-color: var(--re-sage);
+}
+[data-catalog-style="realestate"] .re-button-primary:hover {
+  background: #4f6a3f;
+}
+[data-catalog-style="realestate"] .re-button-secondary {
+  background: var(--re-cream-deep);
+  color: var(--re-taupe-deep);
+  border-color: var(--re-border-strong);
+}
+[data-catalog-style="realestate"] .re-button-secondary:hover {
+  background: var(--re-taupe-pale);
+}
+
+/* ── ListingDetail ────────────────────────────────────────── */
+[data-catalog-style="realestate"] .re-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+[data-catalog-style="realestate"] .re-detail-hero {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(260px, 1fr);
+  gap: 28px;
+  align-items: stretch;
+  background: var(--re-paper);
+  border: 1px solid var(--re-border-faint);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--re-shadow-card);
+}
+@media (max-width: 760px) {
+  [data-catalog-style="realestate"] .re-detail-hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+[data-catalog-style="realestate"] .re-detail-photo {
+  min-height: 320px;
+  background:
+    linear-gradient(
+      135deg,
+      var(--re-taupe-soft) 0%,
+      var(--re-cream-deep) 45%,
+      var(--re-sage-soft) 100%
+    );
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 18px;
+  position: relative;
+}
+[data-catalog-style="realestate"] .re-detail-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    rgba(255, 253, 247, 0.35) 1px,
+    transparent 1.5px
+  );
+  background-size: 8px 8px;
+  pointer-events: none;
+}
+[data-catalog-style="realestate"] .re-detail-photo-type {
+  font-family: var(--re-font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--re-taupe-deep);
+  background: rgba(255, 253, 247, 0.75);
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--re-border);
+  z-index: 1;
+}
+
+[data-catalog-style="realestate"] .re-detail-hero-meta {
+  padding: 28px 32px 28px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+@media (max-width: 760px) {
+  [data-catalog-style="realestate"] .re-detail-hero-meta {
+    padding: 28px;
+  }
+}
+
+[data-catalog-style="realestate"] .re-detail-address {
+  font-family: var(--re-font-display);
+  font-weight: 600;
+  font-size: 2.1rem;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  margin: 0;
+  color: var(--re-ink);
+}
+
+[data-catalog-style="realestate"] .re-detail-priceline {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+[data-catalog-style="realestate"] .re-detail-price {
+  font-family: var(--re-font-display);
+  font-weight: 700;
+  font-size: 1.6rem;
+  color: var(--re-ink);
+}
+[data-catalog-style="realestate"] .re-detail-ppsqft {
+  font-size: 0.85rem;
+  color: var(--re-ink-muted);
+}
+
+[data-catalog-style="realestate"] .re-detail-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin: 4px 0 0;
+}
+
+[data-catalog-style="realestate"] .re-detail-cta-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+[data-catalog-style="realestate"] .re-detail-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--re-ink-muted);
+  margin: 4px 0 0;
+}
+
+[data-catalog-style="realestate"] .re-detail-section {
+  background: var(--re-paper);
+  border: 1px solid var(--re-border-faint);
+  border-radius: 12px;
+  padding: 22px 24px;
+  box-shadow: var(--re-shadow-card);
+}
+
+[data-catalog-style="realestate"] .re-detail-notes {
+  margin: 0;
+  color: var(--re-ink);
+  font-size: 0.95rem;
+}
+
+/* ── Amenities chips ──────────────────────────────────────── */
+[data-catalog-style="realestate"] .re-amenities {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+[data-catalog-style="realestate"] .re-amenity-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  background: var(--re-cream-deep);
+  border: 1px solid var(--re-border);
+  border-radius: 999px;
+  color: var(--re-taupe-deep);
+}
+
+/* ── Rooms ───────────────────────────────────────────────── */
+[data-catalog-style="realestate"] .re-rooms {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(120px, 200px) 1fr;
+  gap: 8px 18px;
+}
+[data-catalog-style="realestate"] .re-room-row {
+  display: contents;
+}
+[data-catalog-style="realestate"] .re-room-label {
+  font-family: var(--re-font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--re-ink);
+  margin: 0;
+}
+[data-catalog-style="realestate"] .re-room-detail {
+  font-size: 0.9rem;
+  color: var(--re-ink-muted);
+  margin: 0;
+}
+
+/* ── Comps table ─────────────────────────────────────────── */
+[data-catalog-style="realestate"] .re-comps-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--re-border-faint);
+  border-radius: 10px;
+  overflow: hidden;
+}
+[data-catalog-style="realestate"] .re-comps-thead {
+  display: grid;
+  grid-template-columns:
+    minmax(160px, 2fr) minmax(80px, 1fr) minmax(60px, 0.8fr)
+    minmax(80px, 1fr) minmax(70px, 0.8fr) minmax(90px, 1fr);
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--re-cream-deep);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--re-taupe-deep);
+}
+[data-catalog-style="realestate"] .re-comp-row {
+  display: grid;
+  grid-template-columns:
+    minmax(160px, 2fr) minmax(80px, 1fr) minmax(60px, 0.8fr)
+    minmax(80px, 1fr) minmax(70px, 0.8fr) minmax(90px, 1fr);
+  gap: 8px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--re-border-faint);
+  font-size: 0.88rem;
+  color: var(--re-ink);
+}
+[data-catalog-style="realestate"] .re-comp-row:nth-child(even) {
+  background: rgba(244, 236, 216, 0.35);
+}
+[data-catalog-style="realestate"] .re-comps-num {
+  text-align: right;
+}
+[data-catalog-style="realestate"] .re-comp-address {
+  font-weight: 600;
+}
+[data-catalog-style="realestate"] .re-comp-soldprice {
+  font-weight: 700;
+  color: var(--re-sage);
+}
+
+/* ── Schools ─────────────────────────────────────────────── */
+[data-catalog-style="realestate"] .re-schools {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+[data-catalog-style="realestate"] .re-school-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--re-cream);
+  border: 1px solid var(--re-border-faint);
+  border-radius: 8px;
+}
+[data-catalog-style="realestate"] .re-school-name {
+  font-family: var(--re-font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin: 0;
+  color: var(--re-ink);
+}
+[data-catalog-style="realestate"] .re-school-level {
+  font-size: 0.78rem;
+  color: var(--re-ink-muted);
+  margin: 0;
+}
+[data-catalog-style="realestate"] .re-school-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+[data-catalog-style="realestate"] .re-school-distance {
+  font-size: 0.78rem;
+  color: var(--re-ink-muted);
+}
+
+/* ── TourSlotPicker ──────────────────────────────────────── */
+[data-catalog-style="realestate"] .re-tour {
+  background: var(--re-paper);
+  border: 1px solid var(--re-border-faint);
+  border-radius: 16px;
+  padding: 28px 32px;
+  box-shadow: var(--re-shadow-card);
+}
+[data-catalog-style="realestate"] .re-tour-header {
+  margin-bottom: 22px;
+}
+[data-catalog-style="realestate"] .re-tour-address {
+  font-family: var(--re-font-display);
+  font-weight: 600;
+  font-size: 1.65rem;
+  letter-spacing: -0.01em;
+  margin: 0 0 6px;
+  color: var(--re-ink);
+}
+[data-catalog-style="realestate"] .re-tour-blurb {
+  font-size: 0.9rem;
+  color: var(--re-ink-muted);
+  margin: 0;
+}
+[data-catalog-style="realestate"] .re-tour-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+[data-catalog-style="realestate"] .re-tour-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--re-cream);
+  border: 1px solid var(--re-border);
+  color: var(--re-ink);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 100ms ease;
+  font-family: var(--re-font-body);
+  position: relative;
+}
+[data-catalog-style="realestate"] .re-tour-slot:hover[data-available="true"] {
+  background: var(--re-sage-pale);
+  border-color: var(--re-sage);
+  transform: translateY(-1px);
+}
+[data-catalog-style="realestate"] .re-tour-slot[data-available="false"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--re-cream-deep);
+  text-decoration: line-through;
+  text-decoration-color: var(--re-ink-faint);
+}
+[data-catalog-style="realestate"] .re-tour-slot[data-picked="true"] {
+  background: var(--re-sage);
+  color: #fff;
+  border-color: var(--re-sage);
+}
+[data-catalog-style="realestate"] .re-tour-slot-day {
+  font-family: var(--re-font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: -0.005em;
+}
+[data-catalog-style="realestate"] .re-tour-slot-time {
+  font-size: 0.85rem;
+  color: var(--re-ink-muted);
+}
+[data-catalog-style="realestate"] .re-tour-slot[data-picked="true"]
+  .re-tour-slot-time {
+  color: rgba(255, 255, 255, 0.9);
+}
+[data-catalog-style="realestate"] .re-tour-slot-flag {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  margin-top: 2px;
+  color: var(--re-ink-faint);
+}
+[data-catalog-style="realestate"] .re-tour-slot-picked {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ── OfferLetterDraft ────────────────────────────────────── */
+[data-catalog-style="realestate"] .re-offer {
+  background: var(--re-paper);
+  border: 1px solid var(--re-border-faint);
+  border-radius: 16px;
+  padding: 28px 32px;
+  box-shadow: var(--re-shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+[data-catalog-style="realestate"] .re-offer-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--re-border-faint);
+}
+[data-catalog-style="realestate"] .re-offer-address {
+  font-family: var(--re-font-display);
+  font-weight: 600;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: var(--re-ink);
+}
+[data-catalog-style="realestate"] .re-offer-neighborhood {
+  font-size: 0.85rem;
+  color: var(--re-ink-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+}
+[data-catalog-style="realestate"] .re-offer-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin: 12px 0 0;
+}
+[data-catalog-style="realestate"] .re-offer-summary-cell {
+  background: var(--re-cream);
+  border: 1px solid var(--re-border-faint);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+[data-catalog-style="realestate"] .re-offer-summary-cell dt {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--re-ink-muted);
+  font-weight: 600;
+}
+[data-catalog-style="realestate"] .re-offer-summary-cell dd {
+  margin: 0;
+  font-family: var(--re-font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--re-ink);
+}
+[data-catalog-style="realestate"] .re-offer-summary-cell-hero {
+  background: var(--re-sage-pale);
+  border-color: var(--re-sage-soft);
+}
+[data-catalog-style="realestate"] .re-offer-summary-cell-hero dd {
+  color: var(--re-sage);
+  font-size: 1.3rem;
+}
+
+[data-catalog-style="realestate"] .re-offer-letter-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--re-taupe-deep);
+}
+[data-catalog-style="realestate"] .re-offer-letter {
+  width: 100%;
+  min-height: 200px;
+  font-family:
+    "Iowan Old Style", "Charter", "Cambria", "Times New Roman", Georgia, serif;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  background: var(--re-cream);
+  border: 1px solid var(--re-border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  color: var(--re-ink);
+  resize: vertical;
+  white-space: pre-wrap;
+  /* Subtle paper grain on the letter card too. */
+  background-image: radial-gradient(
+    rgba(157, 135, 101, 0.05) 1px,
+    transparent 1px
+  );
+  background-size: 6px 6px;
+}
+[data-catalog-style="realestate"] .re-offer-letter:focus {
+  outline: 2px solid var(--re-sage);
+  outline-offset: 2px;
+}
+
+[data-catalog-style="realestate"] .re-offer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+[data-catalog-style="realestate"] .re-offer-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+[data-catalog-style="realestate"] .re-offer-status {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--re-sage-pale);
+  color: var(--re-sage);
+  border: 1px solid var(--re-sage-soft);
+}
+[data-catalog-style="realestate"] .re-offer-status-muted {
+  background: var(--re-cream-deep);
+  color: var(--re-ink-muted);
+  border-color: var(--re-border-faint);
+}
+
+/* ── Screen-reader-only ──────────────────────────────────── */
+[data-catalog-style="realestate"] .re-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

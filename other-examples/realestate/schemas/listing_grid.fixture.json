@@ -1,0 +1,82 @@
+{
+  "name": "listing_grid_three_results",
+  "description": "Canonical realestate-catalog scenario: show_listings returns three Brooklyn properties (Park Slope, Boerum Hill, Park Slope condo).",
+  "surfaceId": "realestate-listings",
+  "catalogId": "copilotkit://realestate-catalog",
+  "components": [
+    {
+      "id": "root",
+      "component": "ListingGrid",
+      "filterSummary": { "path": "/filterSummary" },
+      "children": { "componentId": "listing-card", "path": "/listings" }
+    },
+    {
+      "id": "listing-card",
+      "component": "ListingCard",
+      "address": { "path": "address" },
+      "neighborhood": { "path": "neighborhood" },
+      "beds": { "path": "beds" },
+      "baths": { "path": "baths" },
+      "sqft": { "path": "sqft" },
+      "price": { "path": "price" },
+      "pricePerSqft": { "path": "pricePerSqft" },
+      "propertyType": { "path": "propertyType" },
+      "schoolRating": { "path": "schoolRating" },
+      "status": { "path": "status" },
+      "action": {
+        "event": {
+          "name": "view_listing_details",
+          "context": {
+            "listingId": { "path": "id" },
+            "address": { "path": "address" },
+            "price": { "path": "price" }
+          }
+        }
+      }
+    }
+  ],
+  "data": {
+    "filterSummary": "3 3+ bedroom, Brooklyn, under $1,500,000 homes",
+    "listings": [
+      {
+        "id": "HS-1001",
+        "address": "123 Maple St",
+        "neighborhood": "Park Slope",
+        "beds": "3",
+        "baths": "2",
+        "sqft": "1,450",
+        "price": "$1,395,000",
+        "pricePerSqft": "$962 / sqft",
+        "propertyType": "Brownstone",
+        "schoolRating": "8.4",
+        "status": "Active"
+      },
+      {
+        "id": "HS-1004",
+        "address": "88 Bond St",
+        "neighborhood": "Boerum Hill",
+        "beds": "2",
+        "baths": "2",
+        "sqft": "1,100",
+        "price": "$1,185,000",
+        "pricePerSqft": "$1,077 / sqft",
+        "propertyType": "Co-op",
+        "schoolRating": "7.9",
+        "status": "Active"
+      },
+      {
+        "id": "HS-1009",
+        "address": "150 4th Ave",
+        "neighborhood": "Park Slope",
+        "beds": "3",
+        "baths": "2",
+        "sqft": "1,500",
+        "price": "$1,450,000",
+        "pricePerSqft": "$967 / sqft",
+        "propertyType": "Condo (new)",
+        "schoolRating": "8.4",
+        "status": "Active"
+      }
+    ]
+  }
+}
