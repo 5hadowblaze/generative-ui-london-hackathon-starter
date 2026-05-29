@@ -57,11 +57,45 @@ function childLabel(componentType: string | null, count: number): string {
 }
 
 /**
+ * Locate the "root" component of an updateComponents payload.
+ *
+ * This repo's real grammar (see DEMO_ENVELOPES + public/offline-envelopes.json)
+ * is a FLAT array under `components`, where each entry is
+ * `{ id, component, children, ...props }` and the entry point is the component
+ * with `id === "root"`. We also accept a legacy single-object `root` shape
+ * (back-compat) — `payloadFor` passes whichever the caller resolved.
+ *
+ * Returns the chosen root record, or null if none is recognizable.
+ */
+function pickComponentRoot(
+  payload: Record<string, unknown> | null,
+): Record<string, unknown> | null {
+  if (!payload) return null;
+
+  // Legacy nested shape: { root: {...} }.
+  const legacyRoot = asRecord(payload["root"]);
+  if (legacyRoot) return legacyRoot;
+
+  // Flat wire shape: { components: [ { id, component, children }, ... ] }.
+  const components = payload["components"];
+  if (Array.isArray(components) && components.length > 0) {
+    const byId = components
+      .map(asRecord)
+      .find((c) => c && c["id"] === "root");
+    return byId ?? asRecord(components[0]);
+  }
+
+  return null;
+}
+
+/**
  * Inspect a component root and summarize its direct children.
  *
- * Handles both observed shapes defensively:
- *  - Wire shape: `{ type, properties: { children: [...] } }` where children is
- *    an array of `{ id, basePath? }` or nested nodes.
+ * Handles the observed shapes defensively:
+ *  - Flat wire children as string-id refs: `children: ["hdr", "kpi-row"]` —
+ *    counted directly.
+ *  - Nested children nodes: `{ type, properties: { children: [...] } }` where
+ *    children is an array of `{ id, basePath? }` or nested nodes.
  *  - Template-binding shape: `children: { componentId, path }` (one component
  *    repeated over a bound array) — count is runtime-dependent, so we report
  *    the bound component + path instead of a number.
@@ -97,7 +131,11 @@ function summarizeComponentRoot(
   // Explicit child array.
   if (Array.isArray(children)) {
     const count = children.length;
-    const label = childLabel(rootType, count);
+    // Flat-grammar children are string id-refs to sibling components
+    // (e.g. ["hdr", "kpi-row"]). Those read as generic "components"; only
+    // node-shaped children get a type-derived noun.
+    const allStringRefs = count > 0 && children.every((c) => typeof c === "string");
+    const label = allStringRefs ? `component${count === 1 ? "" : "s"}` : childLabel(rootType, count);
     const line = rootType
       ? `${verb} ${rootType} → ${count} ${label}`
       : `${verb} components (${count} ${label})`;
@@ -115,23 +153,77 @@ function summarizeComponentRoot(
   return { line: rootType ? `${verb} ${rootType}` : `${verb} components` };
 }
 
+/** Render the top-level keys of a data record, annotating array lengths. */
+function describeKeys(data: Record<string, unknown>): string {
+  return Object.keys(data)
+    .map((key) => {
+      const value = data[key];
+      return Array.isArray(value) ? `${key} (${value.length})` : key;
+    })
+    .join(", ");
+}
+
+/** Last segment of a JSON-Pointer path (e.g. "/a/projects" → "projects"). */
+function lastPathSegment(path: string): string | null {
+  const segs = path.split("/").filter((s) => s.length > 0);
+  return segs.length ? segs[segs.length - 1] : null;
+}
+
 /**
- * Summarize a data-model payload: list top-level keys, annotating array
- * lengths. e.g. `{ kpi: {...}, projects: [a,b,c] }` → "kpi, projects (3)".
+ * Summarize a data-model payload. Handles two grammars defensively:
+ *
+ *  - JSON-Pointer wire shape (this repo's real grammar, see DEMO_ENVELOPES +
+ *    public/offline-envelopes.json): `{ path, value }`. When `path` is root
+ *    ("/" or ""), summarize `value`'s top-level keys; when `path` points at a
+ *    key (e.g. "/projects"), read as `Set <key> (<len>)`.
+ *  - Legacy `{ data: {...} }` shape: list top-level keys (kept for back-compat).
+ *
+ * e.g. `{ path: "/", value: { kpi: {...}, projects: [a,b,c] } }`
+ *        → "Bound kpi, projects (3)".
  */
 function summarizeData(
   payload: Record<string, unknown> | null,
   verb: string,
 ): EnvelopeSummary {
-  const data = asRecord(payload?.["data"]);
-  const keys = data ? Object.keys(data) : [];
-  if (keys.length === 0) return { line: `${verb} data` };
+  // JSON-Pointer wire shape: { path, value }.
+  if (payload && "value" in payload) {
+    const path = str(payload, "path");
+    const value = payload["value"];
+    const isRoot = !path || path === "/";
 
-  const parts = keys.map((key) => {
-    const value = data?.[key];
-    return Array.isArray(value) ? `${key} (${value.length})` : key;
-  });
-  return { line: `${verb} ${parts.join(", ")}` };
+    if (isRoot) {
+      const record = asRecord(value);
+      if (record) {
+        const keys = describeKeys(record);
+        return { line: keys ? `${verb} ${keys}` : `${verb} data` };
+      }
+      // Root set to a non-object (array or scalar) — annotate shape.
+      if (Array.isArray(value)) return { line: `${verb} data (${value.length})` };
+      return { line: `${verb} data` };
+    }
+
+    // Non-root path: "Set <key> (<len>)" style.
+    const key = lastPathSegment(path!) ?? path!;
+    if (Array.isArray(value)) return { line: `${verb} ${key} (${value.length})` };
+    const record = asRecord(value);
+    if (record) {
+      const keys = describeKeys(record);
+      return {
+        line: `${verb} ${key}`,
+        detail: keys ? keys : undefined,
+      };
+    }
+    return { line: `${verb} ${key}` };
+  }
+
+  // Legacy `{ data: {...} }` shape (back-compat).
+  const data = asRecord(payload?.["data"]);
+  if (data) {
+    const keys = describeKeys(data);
+    return { line: keys ? `${verb} ${keys}` : `${verb} data` };
+  }
+
+  return { line: `${verb} data` };
 }
 
 /**
@@ -165,12 +257,12 @@ export function summarizeEnvelope(env: CapturedEnvelope): EnvelopeSummary {
 
     case "updateComponents": {
       const p = body ? payloadFor(body, "updateComponents") : null;
-      return summarizeComponentRoot(asRecord(p?.["root"]), "Rendered");
+      return summarizeComponentRoot(pickComponentRoot(p), "Rendered");
     }
 
     case "appendComponents": {
       const p = body ? payloadFor(body, "appendComponents") : null;
-      return summarizeComponentRoot(asRecord(p?.["root"]), "Appended");
+      return summarizeComponentRoot(pickComponentRoot(p), "Appended");
     }
 
     case "updateDataModel": {
