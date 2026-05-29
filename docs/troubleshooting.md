@@ -5,6 +5,68 @@ Most of these are cross-referenced from
 [`CLAUDE.md`](../CLAUDE.md) §"Working from a worktree" — if you're an AI
 assistant, the original notes are there with line refs.
 
+## Agent boot takes 2-3 minutes the first time
+
+The first time you boot a sub-repo agent (e.g.
+`preview_start legal-agent`, or any first invocation of
+`npx @langchain/langgraph-cli dev --config
+other-examples/<name>/agent/langgraph.json`), the logs print:
+
+```text
+npm warn exec The following package was not found and will be installed: @langchain/langgraph-cli@1.2.3
+warn: Launching Python server from @langchain/langgraph-cli is experimental. Please use the `langgraph-cli` package from PyPi instead.
+info: Downloading uv 0.9.11 for darwin...
+```
+
+…and then go silent for 2-3 minutes. The agent is **not** hung. The
+npx-installed `@langchain/langgraph-cli` bootstraps its own embedded
+`uv` and installs the agent's Python deps on first run. There is no
+progress indicator. Subsequent boots are near-instant.
+
+To verify it's still alive while the install runs:
+
+```bash
+until curl -sf http://localhost:8124/ok > /dev/null 2>&1; do sleep 3; done
+```
+
+(Use `:8123` for the top-level agent, `:8124` for a sub-repo agent.)
+
+To pre-warm before the demo: just boot the agent once ahead of time and
+walk away for three minutes. `pnpm doctor` only checks that your
+system-wide `uv` exists — it does not trigger the langgraph CLI's
+embedded uv download, so it can't pre-warm this path.
+
+## Dev server starts on a different port (autoport)
+
+If `pnpm dev` (or `preview_start dev`) prints:
+
+```text
+⚠ Configured port 3000 was in use, so port 56042 was assigned instead
+```
+
+…a prior `pnpm dev`, test runner, or worktree didn't clean up its node
+process. Next.js falls back to a random free port. Docs say "visit
+http://localhost:3000" — but the URL you actually want is the autoport
+Next.js prints in the boot logs.
+
+Find the holder:
+
+```bash
+lsof -nP -iTCP:3000 -sTCP:LISTEN
+```
+
+Three fixes, easiest first:
+
+1. Use the autoport URL from Next.js boot logs. Works immediately for
+   the current session.
+2. Kill the stale process and rerun:
+   ```bash
+   kill $(lsof -nP -iTCP:3000 -sTCP:LISTEN -t)
+   pnpm dev
+   ```
+3. Run `pnpm doctor` before booting — it includes a port-3000 probe and
+   names the holder before you hit the issue.
+
 ## `sh: tsx: command not found` in a worktree
 
 Worktrees inherit git history but not `node_modules`. The fix is one

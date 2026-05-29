@@ -43,11 +43,42 @@ function asText(value: unknown): string {
 }
 
 /**
- * Render helper for a single child slot. Accepts either a literal
- * ComponentId string or a binder-resolved `{ id, basePath }` reference
- * (what a `{ componentId, path }` template binding becomes after the
- * GenericBinder runs). Returns `null` for anything unrecognized so a
- * stale binding does not crash the surface.
+ * Defensive coercion for enum-typed props (`risk`, `tone`, `severity`,
+ * `level`). With the `DynEnum` schema wrapper in definitions.ts, the
+ * binder resolves `{ path: ... }` bindings to the bound string before the
+ * renderer sees them — but a stale or malformed binding could still pass
+ * through as `{ path }`. This helper guarantees we never render an object
+ * as a React child by returning the fallback for any non-string value.
+ *
+ * Without this guard the catalog rendered `<span>{risk}</span>` where
+ * `risk` was `{ path: "risk" }` and React crashed with
+ * "Objects are not valid as a React child (found: object with keys {path})".
+ */
+function asEnum<T extends string>(
+  value: unknown,
+  allowed: ReadonlyArray<T>,
+  fallback: T | "" = "",
+): T | "" {
+  if (typeof value === "string" && (allowed as ReadonlyArray<string>).includes(value)) {
+    return value as T;
+  }
+  return fallback;
+}
+
+/**
+ * Render helper for a single child slot. Accepts:
+ *   - a literal ComponentId string,
+ *   - a binder-resolved `{ id, basePath }` reference (what the GenericBinder
+ *     returns when the schema's single-slot union recognizes `componentId+path`
+ *     and the data model resolves to a single item), OR
+ *   - an array of refs (what the binder returns for a STRUCTURAL union when
+ *     the bound path resolves to an array — even single-slot fields whose
+ *     schema is a child-list union like `marginChild` end up here because
+ *     `scrapeSchemaBehavior` classifies any `componentId+path` option as
+ *     STRUCTURAL and always materializes the result as an array).
+ *
+ * Returns `null` for anything unrecognized so a stale binding does not
+ * crash the surface.
  */
 function renderChildRef(
   ref: unknown,
@@ -55,6 +86,24 @@ function renderChildRef(
 ): React.ReactNode {
   if (typeof ref === "string") {
     return children(ref);
+  }
+  // STRUCTURAL union (e.g. `marginChild`) resolves to an array even when
+  // the underlying data is a single item. Render each entry in order.
+  if (Array.isArray(ref)) {
+    if (ref.length === 0) return null;
+    return ref.map((item, i) => {
+      const key =
+        typeof item === "string"
+          ? `${item}-${i}`
+          : item && typeof item === "object" && "id" in (item as object)
+            ? `${(item as { id: string }).id}-${i}`
+            : `child-${i}`;
+      return (
+        <React.Fragment key={key}>
+          {renderChildRef(item, children)}
+        </React.Fragment>
+      );
+    });
   }
   if (
     ref &&
@@ -158,7 +207,10 @@ export const legalPaperCatalogRenderers: CatalogRenderers<LegalPaperCatalogDefin
     },
 
     Verdict: ({ props }) => {
-      const tone = props.tone ?? "neutral";
+      // Coerce defensively in case a stale `{ path }` binding slips through
+      // (DynEnum should resolve at render time, but treat the renderer as
+      // the last line of defense).
+      const tone = asEnum(props.tone, ["positive", "neutral", "negative"], "neutral");
       const headline = asText(props.headline);
       const summary = asText(props.summary);
       return (
@@ -175,7 +227,16 @@ export const legalPaperCatalogRenderers: CatalogRenderers<LegalPaperCatalogDefin
       const number = asText(props.number);
       const heading = asText(props.heading);
       const body = asText(props.body);
-      const risk = props.risk;
+      // Coerce risk to a known enum string. With DynEnum the binder
+      // resolves `{ path: "risk" }` to e.g. "high"; with bare z.enum it
+      // would have passed through as the raw object, and `<span>{risk}</span>`
+      // below would have crashed React with "Objects are not valid as a
+      // React child".
+      const risk = asEnum(
+        props.risk,
+        ["none", "low", "medium", "high", "critical"],
+        "none",
+      );
       // redlineChildren resolves to either a literal string[] (catalog
       // declared an array of ComponentIds) or an array of `{ id, basePath }`
       // refs (template binding expanded by the GenericBinder). Anything
@@ -203,7 +264,7 @@ export const legalPaperCatalogRenderers: CatalogRenderers<LegalPaperCatalogDefin
                 <span
                   className="lp-risk-badge"
                   data-level={risk}
-                  aria-label={SEVERITY_LABELS[risk as string] ?? `${risk} risk`}
+                  aria-label={SEVERITY_LABELS[risk] ?? `${risk} risk`}
                 >
                   {risk}
                 </span>
@@ -312,7 +373,14 @@ export const legalPaperCatalogRenderers: CatalogRenderers<LegalPaperCatalogDefin
 
     MarginNote: ({ props, children }) => {
       const body = asText(props.body);
-      const severity = props.severity ?? "info";
+      // Coerce defensively — DynEnum should resolve `{ path: "severity" }`
+      // to a string, but never let a raw object leak into the data-attr or
+      // aria-label lookup.
+      const severity = asEnum(
+        props.severity,
+        ["info", "warning", "critical"],
+        "info",
+      );
       const ariaLabel = MARGIN_SEVERITY_LABELS[severity] ?? "Annotation";
       return (
         <div
@@ -360,7 +428,13 @@ export const legalPaperCatalogRenderers: CatalogRenderers<LegalPaperCatalogDefin
     },
 
     RiskBadge: ({ props }) => {
-      const level = props.level;
+      // Coerce so a stale `{ path }` binding falls back to "low" instead
+      // of crashing on `{display}` below.
+      const level = asEnum(
+        props.level,
+        ["low", "medium", "high", "critical"],
+        "low",
+      );
       const label = asText(props.label);
       const display = label || level;
       const ariaLabel = SEVERITY_LABELS[level] ?? `${level} risk`;
