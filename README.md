@@ -35,7 +35,7 @@ Prereqs: Node 20+, pnpm 10+, Python 3.12+, [uv](https://docs.astral.sh/uv/).
 
 ```bash
 git clone <your-fork-url>
-cd london-a2ui-hackathon
+cd agent-interop-london-hackathon-starter
 pnpm install              # also installs the Python agent via uv sync
 
 cp .env.example .env
