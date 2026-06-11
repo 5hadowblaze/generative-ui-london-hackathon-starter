@@ -405,6 +405,6 @@ demo — judges remember broken demos more than missing features.
 - [ ] **The canvas paints a real surface** (not just the "Canvas is empty"
       empty state) when you run your demo prompt.
 - [ ] **Read the sponsor footer.** Google DeepMind, CopilotKit, A2A Net,
-      Linkup — credit them, judges will notice.
+      Linkup, Redis — credit them, judges will notice.
 
 Good luck. Ship the demo.
