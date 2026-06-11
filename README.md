@@ -1,6 +1,6 @@
 # London A2A & A2UI Hackathon — Starter Kit
 
-Welcome to the **London A2A & A2UI Hackathon** — a full-day event at **Google London CSG** on **Saturday, June 13, 2026**, bringing together Google Cloud, [A2A Net](https://a2anet.com/), and [CopilotKit](https://copilotkit.ai). This starter kit is CopilotKit's head start for the **A2UI (Generative UI) track** — a Next.js + FastAPI app where the agent emits declarative **A2UI** envelopes and the frontend renders them as live React components. Wired up with CopilotKit, AG-UI, Google A2UI, Gemini, and an A2A bolt-on for the **Agent Interoperability track**.
+Welcome to the **London A2A & A2UI Hackathon** — a full-day event at **Google London CSG** on **Saturday, June 13, 2026**, brought to you by Google Cloud, [A2A Net](https://a2anet.com/), [CopilotKit](https://copilotkit.ai), and [Linkup](https://www.linkup.so/). This starter kit is CopilotKit's head start for the **A2UI (Generative UI) track** — a Next.js + FastAPI app where the agent emits declarative **A2UI** envelopes and the frontend renders them as live React components. Wired up with CopilotKit, AG-UI, Google A2UI, Gemini, and an A2A bolt-on for the **Agent Interoperability track**.
 
 The headline demo is **pdf-analyst**: drop a PDF in chat and the agent builds the answer UI for you — a fixed-schema dashboard for the at-a-glance view and dynamic A2UI surfaces (Recharts) for any follow-up question. The boring 80% (a 21-component A2UI catalog, the in-canvas surface renderer, the agent loop, the FastAPI transport) is already built so your team can spend the build day on the parts judges remember: your domain, your widgets, your branding.
 
@@ -28,6 +28,7 @@ The agent sends three operations: `createSurface`, `updateComponents`, `updateDa
 - **[CopilotKit](https://docs.copilotkit.ai/)** — The runtime that wires AG-UI through your Next.js app and ships the A2UI renderer. The chat UI, the in-canvas surface renderer, and provider plumbing all come from here. AI-assistant skills + MCP server at [`docs.copilotkit.ai/built-in-agent/build-with-agents`](https://docs.copilotkit.ai/built-in-agent/build-with-agents).
 - **[LangGraph (Python)](https://langchain-ai.github.io/langgraph/)** — The agent loop that emits A2UI envelopes via tool-calls. Two graphs ship by default — a **fixed-schema** dashboard agent and a **dynamic-schema** Q&A agent — served over a FastAPI app (`agent/main.py`, `uvicorn main:app` on `:8123`) that exposes `/fixed`, `/dynamic`, and `/legal` (the `/legal` example's UI is currently a WIP stub; the endpoint itself works). Boots via `uv`.
 - **[Gemini 3.5 Flash](https://aistudio.google.com/)** — Default LLM via the native Google Gen AI SDK (`langchain-google-genai`). Free tier, no credit card. The native SDK is required to handle thought-signature replay across tool turns — see [FROZEN.md](FROZEN.md) for the Gemini 3.x trap history.
+- **[Linkup](https://www.linkup.so/)** — Production-grade **web search API for AI agents**, and a hackathon sponsor. One API call returns sourced, cited answers grounded in live web data — useful when your agent needs facts beyond the uploaded document. Not wired into the default demo, but quick to add to your own agent: grab a free key, then use whichever fits — the LangChain tool (`pip install langchain-linkup` → `LinkupSearchTool`), the hosted **MCP server** (`https://mcp.linkup.so/mcp?apiKey=...`), or the **agent skills** (`npx skills add LinkupPlatform/skills`). Start here: [Linkup for agents →](https://docs.linkup.so/pages/documentation/get-started/for-agents) · [Docs →](https://docs.linkup.so/)
 
 ## Run it locally
 
@@ -127,5 +128,6 @@ MIT. See [LICENSE](LICENSE).
 - **AG-UI protocol** — [AG-UI Protocol working group](https://github.com/ag-ui-protocol/ag-ui) (originated at CopilotKit)
 - **A2A protocol** — [Linux Foundation + Google](https://github.com/a2aproject/A2A)
 - **agents.md spec** — Linux Foundation cross-tool standard (backed by OpenAI, Google, Sourcegraph, Cursor, Factory)
+- **Linkup** — web search API for AI agents ([linkup.so](https://www.linkup.so/)), hackathon sponsor
 - **Base starter** — [CopilotKit/examples/integrations/langgraph-python](https://github.com/CopilotKit/CopilotKit/tree/main/examples/integrations/langgraph-python)
 

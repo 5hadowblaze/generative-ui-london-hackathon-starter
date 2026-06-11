@@ -404,7 +404,7 @@ demo — judges remember broken demos more than missing features.
       `/dynamic`, so a tested document + a tight script is your insurance.
 - [ ] **The canvas paints a real surface** (not just the "Canvas is empty"
       empty state) when you run your demo prompt.
-- [ ] **Read the sponsor footer.** Google DeepMind, CopilotKit, A2A Net —
-      credit them, judges will notice.
+- [ ] **Read the sponsor footer.** Google DeepMind, CopilotKit, A2A Net,
+      Linkup — credit them, judges will notice.
 
 Good luck. Ship the demo.

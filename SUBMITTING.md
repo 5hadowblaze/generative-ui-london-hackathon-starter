@@ -24,8 +24,8 @@
 
 ## Sponsor credit
 
-Name **Google DeepMind, CopilotKit, A2A Net** in your submission copy.
-Judges notice.
+Name **Google DeepMind, CopilotKit, A2A Net, and Linkup** in your submission
+copy. Judges notice.
 
 ## Track 1 entries (A2A interop)
 
