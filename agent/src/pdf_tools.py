@@ -1,4 +1,16 @@
-"""Shared agent tools: PDF text → structured data for the catalog."""
+"""Shared agent tools: PDF text → structured data for the catalog.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CUSTOMIZATION SEAM #3 — Swap demo data
+See HACKATHON.md §3 for the full recipe.
+
+In the pdf-analyst demo the uploaded PDF *is* the data. To point the demo
+at a different document type, edit the extraction prompt + the TypedDict
+shapes below so they describe what your documents yield (invoice → totals
+and line items; paper → findings and figures; report → KPIs and trend),
+then reword the agent system prompts in fixed_agent.py / dynamic_agent.py.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
 from __future__ import annotations
 
 import json

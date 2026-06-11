@@ -1,6 +1,17 @@
 /**
  * A2UI custom catalog. platform-agnostic component definitions.
  *
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * CUSTOMIZATION SEAM #4 — Add an A2UI component
+ * See HACKATHON.md §4 for the full recipe. The component dance:
+ *   1. Add a definition here (one-line description + Zod props schema).
+ *   2. Add the matching React renderer in renderers.tsx.
+ *   3. Mirror a one-line prompt summary in agent/src/catalog.py's
+ *      CATALOG_PROMPT so the agent knows the component exists.
+ * Then run `pnpm validate-widget <path>` (for any JSON you touched) and
+ * `pnpm smoke`.
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *
  * These are the components the agent is allowed to use. Each entry pairs a
  * Zod prop schema with a description. The same definitions are shipped to:
  *   - the frontend renderer (paired with React renderers in renderers.tsx)

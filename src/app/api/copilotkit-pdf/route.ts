@@ -16,7 +16,7 @@ const runtime = new CopilotRuntime({
   agents: {
     // CopilotKit's V2 client expects an agent named "default" for any hook
     // that doesn't pass an explicit agentId (e.g. our root provider mounted
-    // on pages that don't render a chat). We alias it to the fixed wizard.
+    // on pages that don't render a chat). We alias it to the fixed agent.
     default: fixedAgent,
     fixed_agent: fixedAgent,
     dynamic_agent: dynamicAgent,

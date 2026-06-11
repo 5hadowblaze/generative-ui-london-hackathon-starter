@@ -1,6 +1,12 @@
 """The custom A2UI catalog. Python mirror.
 
-This must stay in sync with web/src/a2ui/catalog/definitions.ts. Only the
+CUSTOMIZATION SEAM #4 (agent-side mirror) — Add an A2UI component.
+See HACKATHON.md §4. When you add a component to
+src/a2ui/catalog/definitions.ts (+ a renderer in renderers.tsx), add a
+one-line summary of it to CATALOG_PROMPT below or the agent will never
+emit it.
+
+This must stay in sync with src/a2ui/catalog/definitions.ts. Only the
 catalog ID and the component prop summary live here; the JSON Schema for each
 component is owned by the frontend (it's where the renderers are).
 

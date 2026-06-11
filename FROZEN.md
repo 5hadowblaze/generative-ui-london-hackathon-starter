@@ -171,11 +171,11 @@ It mounts three AG-UI ↔ LangGraph endpoints — `/fixed`, `/dynamic`, `/legal`
 is this same native FastAPI app.
 
 The old **langgraph-cli** serving path (`langgraph dev` / `langgraph.json` /
-the root `serve.py` AG-UI wrapper) belonged to the PortKit default and now
+the `serve.py` AG-UI wrapper) belonged to the PortKit default and now
 applies only to the archived demo under `other-examples/portkit/` (which
-ships its own `agent/langgraph.json`). The root `serve.py` is a PortKit-era
-artifact (it imports a `graph` symbol that the FastAPI `agent/main.py` no
-longer exports) and is not on the pdf-analyst serving path.
+ships its own `agent/langgraph.json`). There is no `serve.py` at the repo
+root anymore — it was retired during the pdf-analyst promotion and is not
+on the pdf-analyst serving path.
 
 ## Package manager
 

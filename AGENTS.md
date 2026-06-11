@@ -20,7 +20,8 @@ subsystems:
   `/catalog`. The A2UI catalog (definitions + renderers) is at `src/a2ui/`.
 - `agent/` — Python LangGraph agents served over **FastAPI**
   (`agent/main.py`, run with `uvicorn main:app` on `:8123`), exposing
-  `/fixed`, `/dynamic`, and `/legal`.
+  `/fixed`, `/dynamic`, and `/legal` (the `/legal` example's UI page is
+  currently a WIP stub; the endpoint works).
 - `a2a/` — Optional A2A bolt-on for Track 1 multi-agent interop (dormant
   until `A2A_AGENT_URL` is set)
 
@@ -84,7 +85,10 @@ starter their own. Search for `CUSTOMIZATION SEAM` to find each one in code.
    `agent/src/dynamic_agent.py` (the dynamic-schema Q&A agent + its
    `generate_a2ui` tool). Both are wired in `agent/main.py`.
 6. **BYO A2A agent** → set `A2A_AGENT_URL`; run `pnpm check-a2a <url>` first.
-   Wired in `src/app/api/copilotkit/[[...slug]]/route.ts`.
+   Wired in `src/app/api/copilotkit/[[...slug]]/route.ts`. Caveat: the seam
+   currently wraps the *legal* agent on that host route, not the pdf-analyst
+   agents (`/api/copilotkit-pdf` has no A2A path yet) — see HACKATHON.md §6
+   for what that means for Track 1 demos.
 
 `HACKATHON.md` has the full step-by-step recipe for each seam.
 

@@ -162,6 +162,31 @@ const STEPS: Step[] = [
     run: async () => pnpmRun("test:widgets"),
   },
   {
+    name: "explain sanity (pnpm explain themes resolves a HACKATHON.md section)",
+    run: async () => {
+      // Regression guard: `pnpm explain` must keep matching HACKATHON.md's
+      // live seam headings ("## §N — Title"). It silently rotted once when
+      // the doc's heading style changed — this step makes that loud.
+      const explainScript = join(REPO_ROOT, "scripts", "explain.ts");
+      const res = spawnSync("pnpm", ["exec", "tsx", explainScript, "themes"], {
+        cwd: REPO_ROOT,
+        stdio: "pipe",
+        env: { ...process.env, FORCE_COLOR: "0" },
+      });
+      const out = `${res.stdout ?? ""}${res.stderr ?? ""}`;
+      if (res.status !== 0) {
+        console.error(out);
+        return { pass: false, detail: `pnpm explain themes exited ${res.status}` };
+      }
+      if (!out.includes("Re-theme")) {
+        console.error(out);
+        return { pass: false, detail: "explain output missing the §1 section" };
+      }
+      console.log(`${GREEN}✓${RESET} ${DIM}pnpm explain themes printed the §1 section.${RESET}\n`);
+      return { pass: true, detail: "explain resolves seam sections" };
+    },
+  },
+  {
     name: "test:schemas (pytest path-vs-data alignment)",
     run: async () => {
       // `pnpm test:schemas` is `cd agent && uv run python -m pytest tests/`.

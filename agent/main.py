@@ -1,6 +1,6 @@
 """FastAPI server exposing the AG-UI agents:
 
-  POST /fixed/   . multi-step launch wizard using fixed A2UI schemas
+  POST /fixed/   . fixed-schema PDF dashboard agent (pdf-analyst)
   POST /dynamic/ . dynamic A2UI surfaces generated at runtime
   POST /legal/   . contract-review copilot (legal-contract-review example)
 
@@ -56,7 +56,7 @@ add_langgraph_fastapi_endpoint(
     app=app,
     agent=LangGraphAGUIAgent(
         name="fixed_agent",
-        description="Multi-step launch wizard with fixed A2UI schemas.",
+        description="Fixed-schema PDF dashboard agent (pdf-analyst).",
         graph=fixed_graph,
         config=_AGENT_CONFIG,
     ),

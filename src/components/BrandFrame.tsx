@@ -1,15 +1,11 @@
 "use client";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// CUSTOMIZATION SEAM #2 — Re-brand the shell
-// See HACKATHON.md §2 for the full recipe.
-// Pattern to copy: this file — swap the logo, product name, and
-// accent colors. Use it as a thin header wrapper around the app
-// shell. The default props mirror the inherited demo so you can
-// drop it in without breaking anything.
-//
-// Don't touch:
-//   - chat affordances in src/app/page.tsx
+// LEGACY shell header (PortKit-era) — NOT Seam #2, and not mounted by
+// any live route. The pdf-analyst default demo's chrome (the live Seam
+// #2) is src/components/pdf-analyst/Brand.tsx — see HACKATHON.md §2.
+// This wrapper is kept for the archived PortKit example; don't wire it
+// into the pdf-analyst pages unless you mean to.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import type { ReactNode } from "react";

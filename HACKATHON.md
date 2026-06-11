@@ -3,9 +3,10 @@
 Welcome to the London A2A & A2UI Hackathon. This is the
 canonical Track 2 (A2UI) starter from CopilotKit. The repo is already wired:
 two LangGraph agents on a FastAPI server (`uvicorn main:app`, `:8123`), an
-A2UI v0.9 renderer, a 21-component catalog, the **pdf-analyst** demo
-(chat-with-your-PDF → the agent builds the answer UI), and the envelope
-inspector. Your job is to make it about **your** domain and ship a demo
+A2UI v0.9 renderer, a 21-component catalog, and the **pdf-analyst** demo
+(chat-with-your-PDF → the agent builds the answer UI, painted into the
+canvas beside the chat and echoed inline by the `MirrorRenderer` pill).
+Your job is to make it about **your** domain and ship a demo
 your judges will remember.
 
 There are **six customization seams** — six places in the code marked with
@@ -29,7 +30,7 @@ result in past dry runs.
 | **0:30–1:30** Re-skin     | Pick a domain. Re-theme + re-brand. Land a logo and palette.                                        | §1, §2            |
 | **1:30–2:30** Swap data   | Point the demo at your document type. Tune the extractor + agent prompts.                            | §3, (optional §5) |
 | **2:30–3:30** Widget pass | Pick ONE custom component your demo needs. Add it to the catalog and adapt. | §4                |
-| **3:30–4:15** Polish      | Empty-state copy. Suggestion chips. Make the inspector look intentional.                            | §1, §2            |
+| **3:30–4:15** Polish      | Empty-state copy. Suggestion chips. Make the canvas + chat look intentional.                        | §1, §2            |
 | **4:15–4:45** Rehearse    | Run the demo three times against your PDF. Run `pnpm smoke`.                                | —                 |
 | **4:45–5:00** Submit      | Push to GitHub. Fill out `SUBMITTING.md`.                                                           | —                 |
 
@@ -77,8 +78,8 @@ half-shipped component.
 
 **If layout breaks:** `pnpm theme:reset` reverts you to known-good.
 
-**AI assistant slash:** "theme it for X" — they should only edit these two
-files. Push back if they want to restructure components.
+**AI assistant slash:** "theme it for X" — they should only edit the files
+listed above. Push back if they want to restructure components.
 
 ### Semantic tokens in `globals.css`
 
@@ -296,7 +297,7 @@ whole agent behavior needs to change.
 **Where it lives:**
 
 - `src/app/api/copilotkit/[[...slug]]/route.ts` — the A2A middleware wiring
-  (touched by Workstream B; do not edit by hand)
+  (grep `CUSTOMIZATION SEAM #6` in that file)
 - `a2a/` — toy subagent + compliance checker
 
 **Recipe (in order — don't skip the check):**
@@ -310,6 +311,20 @@ whole agent behavior needs to change.
 
 **A2A is dormant by default.** Unset `A2A_AGENT_URL` and the codepath
 disappears — zero cost if you're not using Track 1.
+
+> **Honest limitation (read before building a Track 1 demo on this).** The
+> A2A seam currently wraps the **legal-contract-review** agent on the host
+> runtime route (`/api/copilotkit`), not the pdf-analyst agents — the
+> pdf-analyst routes (`/fixed`, `/dynamic`) talk to their own runtime at
+> `/api/copilotkit-pdf`, which has no A2A path yet (see the `TODO(S4)`
+> comment in the route file). The legal example's UI page is also currently
+> a work-in-progress stub. So today the seam proves the *wiring* (the
+> middleware injects `send_message_to_a2a_agent` into the wrapped agent),
+> but there is no polished end-to-end surface to demo it from. If Track 1
+> is your track: either re-home the middleware onto the agents in
+> `src/app/api/copilotkit-pdf/route.ts` (same `A2AMiddlewareAgent` pattern,
+> wrap `fixedAgent`/`dynamicAgent`), or drive the partner agent through
+> your own added surface. Run `pnpm check-a2a` either way.
 
 ---
 
@@ -391,11 +406,5 @@ demo — judges remember broken demos more than missing features.
       empty state) when you run your demo prompt.
 - [ ] **Read the sponsor footer.** Google DeepMind, CopilotKit, A2A Net —
       credit them, judges will notice.
-
-> The scripts D delivers (`pnpm run doctor`, `pnpm smoke`, `pnpm verify-pins`,
-> `pnpm test:widgets`, `pnpm validate-widget`, `pnpm new-widget`, `pnpm
-check-a2a`, `pnpm explain`) are landed by Workstream D in parallel with
-> this doc. If a script isn't yet wired when you read this, check
-> `package.json` for the canonical name.
 
 Good luck. Ship the demo.

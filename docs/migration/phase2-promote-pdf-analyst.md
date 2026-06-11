@@ -1,3 +1,10 @@
+> **HISTORICAL — superseded by the merged migration (PR #60/#61).** This is
+> the internal planning doc for the PortKit → pdf-analyst promotion, kept for
+> archaeology. Where it conflicts with `AGENTS.md` / `HACKATHON.md` /
+> `FROZEN.md`, those files win (e.g. the EnvelopeInspector mentioned below was
+> ultimately REMOVED, not preserved — see AGENTS.md hard rule #5). Do not use
+> this doc as a source of truth for the current layout.
+
 > **Status:** Planned · **Created:** 2026-06-03 · **Owner:** Jerel · **Serving model:** Approach A (unified FastAPI) · **Parent:** A2UI PDF Analyst migration (Phase 1 = DONE, merged via PR #56)
 
 ## TL;DR

@@ -1,3 +1,12 @@
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// CUSTOMIZATION SEAM #2 — Re-brand the shell
+// See HACKATHON.md §2 for the full recipe.
+//
+// The pdf-analyst chrome: Logo, SiteNav (top nav), PageHeader (landing
+// hero), WorkspaceHeader (the /fixed and /dynamic workspace bar). Swap the
+// logo asset in public/brand/, rename the product, rewrite the hero copy.
+// Brand tints come from src/app/(pdf)/pdf-analyst.css (Seam #1).
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 import Image from "next/image";
 import Link from "next/link";
 

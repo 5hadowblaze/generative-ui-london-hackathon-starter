@@ -1,3 +1,10 @@
+> **HISTORICAL — superseded by the merged migration (PR #60/#61).** This is
+> the internal planning doc for the PortKit → pdf-analyst promotion, kept for
+> archaeology. Where it conflicts with `AGENTS.md` / `HACKATHON.md` /
+> `FROZEN.md`, those files win (e.g. the EnvelopeInspector mentioned below was
+> ultimately REMOVED, not preserved — see AGENTS.md hard rule #5). Do not use
+> this doc as a source of truth for the current layout.
+
 # Phase 2 — Execution Plan (implementation-grade, 2026-06-03)
 
 Derived from 3 parallel wiring surveys. Companion to `phase2-promote-pdf-analyst.md` (strategy/decisions).

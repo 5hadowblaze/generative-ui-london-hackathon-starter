@@ -1,5 +1,12 @@
 """Dynamic-schema Q&A agent.
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CUSTOMIZATION SEAM #5 — Swap the agent flow (dynamic-schema Q&A)
+See HACKATHON.md §5 for the full recipe. Edit the prompts below to change
+how the secondary LLM composes answer UI from the catalog. The fixed
+dashboard flow lives in fixed_agent.py.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 The agent answers any question about the most-recently-uploaded PDF by
 inventing the UI for the answer using our custom catalog.
 

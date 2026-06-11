@@ -3,14 +3,14 @@
  * pnpm explain <topic> — Print the right HACKATHON.md section to the terminal.
  *
  * Topics map to HACKATHON.md headings:
- *   themes   → Seam #1 (Re-theme)
- *   branding → Seam #2 (Re-brand the shell)
- *   data     → Seam #3 (Swap demo data)
- *   widgets  → Seam #4 (Add an A2UI widget)
- *   domain   → Seam #5 (Switch domain)
- *   a2a      → Seam #6 (BYO A2A agent)
+ *   themes   → §1 (Re-theme)
+ *   branding → §2 (Re-brand the shell)
+ *   data     → §3 (Swap demo data)
+ *   widgets  → §4 (Add an A2UI component)
+ *   domain   → §5 (Swap the agent flow)
+ *   a2a      → §6 (BYO A2A agent)
  *
- * If HACKATHON.md doesn't exist yet (Workstream C in flight), prints a friendly
+ * If HACKATHON.md is missing (e.g. a trimmed fork), prints a friendly
  * message + the topic-to-section mapping so the hacker still gets a pointer.
  */
 import { existsSync, readFileSync } from "node:fs";
@@ -30,31 +30,31 @@ const TOPIC_TO_SEAM: Record<string, { seam: number; title: string; summary: stri
     seam: 1,
     title: "Re-theme",
     summary:
-      "Edit src/lib/a2ui-theme.css and any theme tokens. Tailwind tokens + CSS variables drive the look.",
+      "Edit src/a2ui/theme.css (A2UI surface tokens) + src/app/(pdf)/pdf-analyst.css (shell brand tokens). CSS variables, no rebuild. `pnpm theme:reset` reverts.",
   },
   branding: {
     seam: 2,
     title: "Re-brand the shell",
     summary:
-      "Edit src/components/BrandFrame.tsx (header, logo, palette accents). Keeps the layout intact.",
+      "Edit src/components/pdf-analyst/Brand.tsx (Logo, SiteNav, PageHeader, WorkspaceHeader). Swap the asset in public/brand/. Keeps the layout intact.",
   },
   data: {
     seam: 3,
     title: "Swap demo data",
     summary:
-      "Edit agent/src/query.py — or agent/src/domains/<active>/data/ if you've switched domains.",
+      "The uploaded PDF is the data. Tune the extraction prompt + TypedDict shapes in agent/src/pdf_tools.py, and the agent system prompts in agent/src/fixed_agent.py / dynamic_agent.py.",
   },
   widgets: {
     seam: 4,
-    title: "Add an A2UI widget",
+    title: "Add an A2UI component",
     summary:
-      "Copy agent/src/tools/risk_register.py:show_risk_register as the template (canonical minimal example). Five surfaces to touch — see HACKATHON.md §4 or `.claude/skills/create-a2ui-widget`.",
+      "Add a definition (Zod props) to src/a2ui/catalog/definitions.ts, a React renderer to src/a2ui/catalog/renderers.tsx, and mirror a one-line summary in agent/src/catalog.py's CATALOG_PROMPT. See HACKATHON.md §4 or `.claude/skills/create-a2ui-widget`.",
   },
   domain: {
     seam: 5,
-    title: "Switch domain",
+    title: "Swap the agent flow",
     summary:
-      "Set DOMAIN=<name> in .env. Canonical stub at agent/src/domains/shopping/.",
+      "Edit agent/src/fixed_agent.py (dashboard flow + agent/src/a2ui/schemas/dashboard.json layout) or agent/src/dynamic_agent.py (dynamic Q&A). Both are served by agent/main.py.",
   },
   a2a: {
     seam: 6,
@@ -73,15 +73,19 @@ const TOPIC_ALIASES: Record<string, string> = {
   logo: "branding",
   shell: "branding",
   "demo-data": "data",
-  query: "data",
+  pdf: "data",
+  extraction: "data",
   widget: "widgets",
   "a2ui-widget": "widgets",
   card: "widgets",
+  component: "widgets",
+  catalog: "widgets",
   "fixed-schema": "widgets",
   "dynamic-schema": "widgets",
-  domains: "domain",
-  "switch-domain": "domain",
-  shopping: "domain",
+  agent: "domain",
+  agents: "domain",
+  flow: "domain",
+  "agent-flow": "domain",
   "a2a-agent": "a2a",
   interop: "a2a",
 };
@@ -89,20 +93,23 @@ const TOPIC_ALIASES: Record<string, string> = {
 function printMapping(): void {
   console.log(`${BOLD}Topics:${RESET}`);
   for (const [key, info] of Object.entries(TOPIC_TO_SEAM)) {
-    console.log(`  ${CYAN}${key.padEnd(10)}${RESET} → Seam #${info.seam}: ${info.title}`);
+    console.log(`  ${CYAN}${key.padEnd(10)}${RESET} → §${info.seam}: ${info.title}`);
     console.log(`    ${DIM}${info.summary}${RESET}`);
   }
 }
 
 /**
- * Extract a section from HACKATHON.md given a "Seam #N" heading marker.
- * We grab from the matching heading through the next heading at the same or
- * higher level (or EOF).
+ * Extract a seam section from HACKATHON.md. The live headings use the
+ * "## §N — Title" form; we also accept the older "## Seam #N" form so the
+ * script keeps working if the doc style changes back.
  */
 function extractSeamSection(md: string, seamNumber: number): string | null {
   const lines = md.split("\n");
-  // Match either "## Seam #N:" or "### Seam #N:" or any heading containing "Seam #N"
-  const startRegex = new RegExp(`^(#+)\\s+.*Seam\\s*#?${seamNumber}\\b`, "i");
+  // Match a heading containing either "§N" or "Seam #N" / "Seam N".
+  const startRegex = new RegExp(
+    `^(#+)\\s+.*(?:§\\s*${seamNumber}\\b|Seam\\s*#?${seamNumber}\\b)`,
+    "i",
+  );
   let startIdx = -1;
   let startLevel = 0;
 
@@ -147,15 +154,12 @@ function main(): void {
     process.exit(1);
   }
 
-  console.log(`${BOLD}${CYAN}Seam #${info.seam} — ${info.title}${RESET}\n`);
+  console.log(`${BOLD}${CYAN}§${info.seam} — ${info.title}${RESET}\n`);
   console.log(`${info.summary}\n`);
 
   if (!existsSync(HACKATHON_MD)) {
-    console.log(
-      `${YELLOW}HACKATHON.md doesn't exist yet${RESET} (Workstream C is still in flight).`,
-    );
-    console.log(`${DIM}Once HACKATHON.md lands, this script will print the full Seam #${info.seam} section.${RESET}\n`);
-    console.log(`${DIM}All seams:${RESET}\n`);
+    console.log(`${YELLOW}HACKATHON.md not found in this checkout.${RESET}`);
+    console.log(`${DIM}The summary above is still accurate. All seams:${RESET}\n`);
     printMapping();
     process.exit(0);
   }
@@ -164,9 +168,9 @@ function main(): void {
   const section = extractSeamSection(md, info.seam);
   if (!section) {
     console.log(
-      `${YELLOW}HACKATHON.md exists but I couldn't find a heading matching "Seam #${info.seam}".${RESET}`,
+      `${YELLOW}HACKATHON.md exists but I couldn't find a heading matching "§${info.seam}".${RESET}`,
     );
-    console.log(`${DIM}Run \`grep -ni "seam" HACKATHON.md\` to see the actual headings.${RESET}`);
+    console.log(`${DIM}Run \`grep -n "^##" HACKATHON.md\` to see the actual headings.${RESET}`);
     process.exit(1);
   }
 

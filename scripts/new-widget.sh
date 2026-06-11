@@ -64,16 +64,18 @@ fi
 
 # Catalog schema — bare v0.9 component array (shape (a)). Mirrors the shape of
 # agent/src/a2ui/schemas/dashboard.json (the pdf-analyst dashboard surface).
+# Uses "Stack" for the root container — that's the layout primitive in the
+# live catalog (src/a2ui/catalog/definitions.ts); there is no "Column".
 cat > "$CATALOG_PATH" <<JSON
 [
   {
     "id": "root",
-    "component": "Column",
+    "component": "Stack",
     "children": {
       "componentId": "${NAME}-item",
       "path": "/items"
     },
-    "gap": 12
+    "gap": "md"
   },
   {
     "id": "${NAME}-item",
@@ -84,20 +86,23 @@ cat > "$CATALOG_PATH" <<JSON
 ]
 JSON
 
-# Fixture — full envelope shape for pnpm test:widgets
+# Fixture — full envelope shape for pnpm test:widgets. The catalogId matches
+# CATALOG_ID in src/a2ui/catalog/definitions.ts + agent/src/catalog.py — the
+# live pdf-analyst catalog (the old copilotkit://app-dashboard-catalog ID was
+# archived with PortKit).
 cat > "$FIXTURE_PATH" <<JSON
 {
   "surfaceId": "${NAME}-surface",
-  "catalogId": "copilotkit://app-dashboard-catalog",
+  "catalogId": "https://cpk-a2ui.local/catalogs/copilotkit/v1",
   "components": [
     {
       "id": "root",
-      "component": "Column",
+      "component": "Stack",
       "children": {
         "componentId": "${NAME}-item",
         "path": "/items"
       },
-      "gap": 12
+      "gap": "md"
     },
     {
       "id": "${NAME}-item",
@@ -109,7 +114,7 @@ cat > "$FIXTURE_PATH" <<JSON
   "data": {
     "items": [
       { "title": "Example ${PASCAL_NAME} 1", "subtitle": "Replace me with real data" },
-      { "title": "Example ${PASCAL_NAME} 2", "subtitle": "From a Python tool in agent/src/tools/" }
+      { "title": "Example ${PASCAL_NAME} 2", "subtitle": "Bound via update_data_model" }
     ]
   }
 }
@@ -125,22 +130,22 @@ echo -e "${GREEN}${BOLD}Created two widget files:${RESET}"
 echo -e "  ${BOLD}${CATALOG_PATH}${RESET}"
 echo -e "  ${BOLD}${FIXTURE_PATH}${RESET}"
 echo
-echo -e "${BOLD}Next steps (the widget dance — pdf-analyst layout):${RESET}"
+echo -e "${BOLD}Next steps (the component dance — pdf-analyst layout):${RESET}"
 echo -e "  ${DIM}1. (done) Catalog schema → ${NAME}.json${RESET}"
 echo -e "  ${DIM}2. (done) Fixture       → ${NAME}.fixture.json${RESET}"
 echo -e "  ${DIM}3. Register the component in the frontend catalog:${RESET}"
 echo -e "     ${DIM}- src/a2ui/catalog/definitions.ts  → add \"${PASCAL_NAME}\" (props + Zod schema)${RESET}"
 echo -e "     ${DIM}- src/a2ui/catalog/renderers.tsx   → add the React renderer for it${RESET}"
-echo -e "  ${DIM}4. Make the agent emit it. The default agent is the FastAPI app at${RESET}"
-echo -e "     ${DIM}agent/main.py (/fixed, /dynamic, /legal). For a fixed surface, add the${RESET}"
-echo -e "     ${DIM}schema to a tool in agent/src/fixed_agent.py; for a generated one, the${RESET}"
-echo -e "     ${DIM}secondary LLM in agent/src/dynamic_agent.py emits the tree at runtime.${RESET}"
-echo -e "  ${DIM}5. Cite the new component in the agent's system prompt so the LLM knows WHEN${RESET}"
-echo -e "     ${DIM}to use it (see the prompt strings in agent/src/fixed_agent.py).${RESET}"
+echo -e "  ${DIM}4. Mirror it for the agent: add a one-line \"${PASCAL_NAME}\" summary to${RESET}"
+echo -e "     ${DIM}CATALOG_PROMPT in agent/src/catalog.py, or the agent will never emit it.${RESET}"
+echo -e "  ${DIM}5. Make the agent emit it. For a fixed surface, add it to the layout at${RESET}"
+echo -e "     ${DIM}agent/src/a2ui/schemas/dashboard.json (used by agent/src/fixed_agent.py);${RESET}"
+echo -e "     ${DIM}the secondary LLM in agent/src/dynamic_agent.py picks it up from the${RESET}"
+echo -e "     ${DIM}prompt mirror automatically.${RESET}"
 echo
 echo -e "${BOLD}Verify with:${RESET}"
-echo -e "  ${DIM}pnpm validate-widget agent/src/widgets/${NAME}.json${RESET}"
-echo -e "  ${DIM}pnpm validate-widget agent/src/widgets/${NAME}.fixture.json${RESET}"
+echo -e "  ${DIM}pnpm validate-widget agent/src/a2ui/schemas/${NAME}.json${RESET}"
+echo -e "  ${DIM}pnpm validate-widget agent/src/a2ui/schemas/${NAME}.fixture.json${RESET}"
 echo -e "  ${DIM}pnpm test:widgets${RESET}"
 echo
 echo -e "${DIM}For the full guided flow, ask Claude Code to run the create-a2ui-widget skill.${RESET}"

@@ -1,328 +1,214 @@
 ---
 name: create-a2ui-widget
-description: Scaffolds a new A2UI widget end-to-end inside the CopilotKit A2UI hackathon starter. Coordinates the 5-surface widget dance (catalog entry, fixture, Python tool, TS schema declaration, prompt hint) so widgets actually render instead of ending up half-finished. Use when the hacker says "add a widget", "scaffold a card", "build me a [domain] visual", "build me a metrics card", "add an A2UI widget", "make a new component", or asks for a new generative-UI surface in this repo. Defaults to the fixed-schema path (predictable for demos) and documents the dynamic-schema fallback. Anchors against the canonical `show_risk_register` example. Enforces the AGENTS.md hard rules — never bump @copilotkit/* versions, always run `pnpm validate-widget` after editing widget JSON, always run `pnpm smoke` before declaring done. Don't use for re-theming the app (edit `src/app/theme.ts` directly), swapping demo data (Seam #3 — edit `agent/src/query.py` directly), switching domains (Seam #5 — set `DOMAIN=` in `.env`), or wiring an A2A partner agent (Seam #6 — `pnpm check-a2a <url>`).
-version: 1.0.0
+description: Adds a new A2UI component to the CopilotKit A2UI hackathon starter's shared catalog, end-to-end. Coordinates the 3-surface component dance (TypeScript definition + Zod prop schema, React renderer, agent prompt mirror) so components actually render instead of ending up half-finished. Use when the hacker says "add a widget", "add a component", "scaffold a card", "build me a [domain] visual", "build me a metrics card", "add an A2UI widget", "make a new component", or asks for a new generative-UI surface in this repo. Anchors against the live catalog at `src/a2ui/catalog/definitions.ts`. Enforces the AGENTS.md hard rules — never bump @copilotkit/* versions, always run `pnpm validate-widget` after editing widget JSON, always run `pnpm smoke` before declaring done. Don't use for re-theming (Seam #1 — edit `src/a2ui/theme.css` + `src/app/(pdf)/pdf-analyst.css`), swapping demo data (Seam #3 — edit `agent/src/pdf_tools.py`), swapping the agent flow (Seam #5 — edit `agent/src/fixed_agent.py` / `agent/src/dynamic_agent.py`), or wiring an A2A partner agent (Seam #6 — `pnpm check-a2a <url>`).
+version: 2.0.0
 ---
 
-# Create A2UI Widget
+# Create A2UI Component
 
 ## When To Use
 
-Trigger this skill whenever the hacker wants to add a new A2UI widget — a new declarative UI surface the agent can render. Trigger phrases include:
+Trigger this skill whenever the hacker wants to add a new A2UI component — a
+new declarative UI primitive the agent can render. Trigger phrases include:
 
-- "add a widget"
+- "add a widget" / "add a component"
 - "scaffold a card"
 - "build me a [domain] visual" (e.g. "build me a portfolio card", "build me a recipe card")
 - "build me a metrics card"
 - "add an A2UI widget"
 - "make a new A2UI component"
-- "scaffold an a2ui surface"
 - "I want a widget that shows [X]"
 
 Do NOT trigger this skill for:
 
-- Re-theming colors / fonts (edit `src/app/theme.ts` and `src/app/a2ui-theme.css` directly — that's Seam #1).
-- Swapping demo data (edit `agent/src/query.py` or `agent/src/domains/<active>/data/` — Seam #3).
-- Switching the active domain (set `DOMAIN=` in `.env` — Seam #5).
-- Wiring an external A2A agent (run `pnpm check-a2a <url>` then set `A2A_AGENT_URL` — Seam #6).
-- Re-branding the shell (edit `src/components/BrandFrame.tsx` — Seam #2).
+- Re-theming colors / fonts — Seam #1: edit `src/a2ui/theme.css` (A2UI
+  surface tokens) + `src/app/(pdf)/pdf-analyst.css` (shell brand tokens).
+- Re-branding the shell — Seam #2: edit `src/components/pdf-analyst/Brand.tsx`.
+- Swapping demo data — Seam #3: the uploaded PDF is the data; tune
+  `agent/src/pdf_tools.py`.
+- Swapping the agent flow — Seam #5: edit `agent/src/fixed_agent.py` /
+  `agent/src/dynamic_agent.py`.
+- Wiring an external A2A agent — Seam #6: run `pnpm check-a2a <url>` then set
+  `A2A_AGENT_URL`.
 
-## What This Skill Coordinates: The 5-Surface Widget Dance
+## The catalog model (read this before editing)
 
-The #1 reason widgets ship half-finished in this starter is that hackers (and their AI assistants) edit one or two of the five files and call it done. A widget needs ALL FIVE surfaces touched. This skill walks you through every one of them and refuses to declare done until they are all present.
+The pdf-analyst catalog is **one shared design system**: 21 platform-agnostic
+component definitions paired with React renderers, defined entirely in
+TypeScript. Both agents (`/fixed` and `/dynamic`) compose surfaces from the
+same catalog, so adding a component makes it available everywhere. There is
+**no per-widget JSON + fixture + Python tool** in this flow — that older
+"5-surface widget dance" belongs to the archived PortKit demo under
+`other-examples/portkit/` and must not be followed here. There is no
+`agent/src/widgets/`, no `agent/src/tools/`, no `agent/src/domains/`, and no
+`EnvelopeInspector` in the live repo.
 
-The five surfaces, in order:
+## The 3-Surface Component Dance
 
-1. **Catalog entry** — `agent/src/widgets/<name>.json`. Registers the widget shape in the v0.9 catalog.
-2. **Fixture** — `agent/src/widgets/<name>.fixture.json`. Named test scenario so `pnpm test:widgets` can render it offline.
-3. **Python tool** — create `agent/src/tools/<name>.py` (one tool per file), then add it to `agent/src/domains/default/tools.py` so the active domain picks it up.
-4. **TS schema declaration** — `src/app/api/copilotkit/[[...slug]]/route.ts` `a2ui.schema` array (only required when using fixed schema with `injectA2UITool: true`; this starter defaults to `injectA2UITool: false`, so the schema declaration is implicit via the catalog JSON — see "Schema declaration mode" below).
-5. **Prompt hint** — append a line to `agent/src/domains/default/prompts.py` (the `TOOL_RULES` block) so the agent knows *when* to call the new tool.
+The #1 reason components ship half-finished is that hackers (and their AI
+assistants) touch one or two of the three surfaces and call it done. A
+component needs ALL THREE. Skip one and either nothing renders or the agent
+never emits it.
+
+1. **Definition** — `src/a2ui/catalog/definitions.ts`. Add an entry to the
+   `definitions` object: a one-line `description` plus a Zod `props` schema.
+2. **Renderer** — `src/a2ui/catalog/renderers.tsx`. Add the matching React
+   component to the `renderers` map.
+3. **Prompt mirror** — `agent/src/catalog.py`. Add a one-line summary of the
+   component to `CATALOG_PROMPT` so the agent knows it exists and what props
+   it accepts.
 
 ## Hard Rules (from AGENTS.md — do not violate)
 
-- **Never run `pnpm install` for a new `@copilotkit/*` version.** Versions are pinned in `FROZEN.md`. The pre-commit hook will reject any drift.
-- **Always run `pnpm validate-widget agent/src/widgets/<name>.json`** after editing any widget JSON. Catches envelope shape errors before runtime.
-- **Always run `pnpm smoke`** before declaring the work done. Composite gate (validator + pins + offline + canned prompt).
-- **Don't edit the renderer or middleware.** Widgets are pure data — declare them, don't code them.
-- **Don't touch `src/components/EnvelopeInspector.tsx`** unless explicitly asked. It's the hackathon's "show the wire" affordance.
+- **Never run `pnpm install` for a new `@copilotkit/*` version.** Versions
+  are pinned in `FROZEN.md`. The pre-commit hook will reject any drift.
+- **Always run `pnpm validate-widget <path>`** after editing any widget/schema
+  JSON (e.g. `agent/src/a2ui/schemas/dashboard.json`).
+- **Always run `pnpm smoke`** before declaring the work done.
+- **Don't write a new React renderer system for A2UI primitives.** Renderers
+  go in the catalog's `renderers.tsx` map; `@copilotkit/a2ui-renderer` owns
+  the rendering pipeline.
+- **Don't reintroduce an envelope-inspector rail.** The A2UI output is
+  surfaced by the in-canvas `SurfaceCanvas` + the chat `MirrorRenderer` pill.
 
-## Fixed vs Dynamic Schema
+## Procedure
 
-- **Default to fixed schema** (this skill's main path). Predictable, snapshot-renderable, demo-safe. Use for anything you'd show a judge.
-- **Dynamic schema** (fallback) — when the hacker explicitly says "I want the AI to design the widget on the fly" or asks for "open-ended" UI. The agent uses `generate_a2ui` (already wired) and you only need to update the system prompt to teach it when. No catalog or fixture file is required for dynamic-only widgets; however, judges remember the demo where the dashboard rendered the same way every time.
+### Step 1 — Read the canonical examples
 
-## Procedure: Add a Fixed-Schema Widget
+Pick a `PascalCase` name (e.g. `Timeline`, `RecipeCard`, `MetricGrid`).
 
-Follow every step. Do not skip. The order matters — catalog before fixture, fixture before Python tool, Python tool before registration, registration before prompt hint.
+Read these two files end-to-end before writing anything:
 
-### Step 1 — Pick a name and read the canonical example
+- `src/a2ui/catalog/definitions.ts` — the 21 shipped definitions. Note the
+  helpers at the top: `childRef` / `childrenRef` (component-ID references)
+  and `stringOrPath` (props that may be a literal or a `{path}` data
+  binding). Note `CATALOG_ID` — do not change it.
+- `src/a2ui/catalog/renderers.tsx` — the matching React renderers. The
+  binder hands renderers **resolved** props (literals, not `{path}` objects).
 
-Pick `<name>` (snake_case, e.g. `recipe_card`, `metrics_dashboard`, `portfolio_card`).
+For a chart-shaped component, copy the shape of `BarChart`; for a
+content-shaped one, copy `Callout` or `StatCard`.
 
-Read `agent/src/tools/risk_register.py` end-to-end. The `show_risk_register` function is THE canonical minimal example for fixed schema — one helper, one tree, one template binding. Note the four moving parts: `CATALOG_ID`, `SURFACE_ID`, the loaded `SCHEMA`, and the `_build_data` helper.
+### Step 2 — Add the definition
 
-For a heavier reference (KPI cards + nested sections + multiple data shapes), read `agent/src/tools/project_dashboard.py:show_project_dashboard`.
-
-Also read `agent/src/widgets/risk_register.json` for the catalog entry shape and `agent/src/widgets/risk_register.fixture.json` for the matching fixture.
-
-### Step 2 — Write the catalog entry
-
-Create `agent/src/widgets/<name>.json`. Mirror the canonical `risk_register.json` shape — a top-level object with `id`, `name`, `description`, `catalogId`, `pythonTool`, and a `schema` array (the v0.9 component tree). Minimum shape:
-
-```json
-{
-  "id": "<name>",
-  "name": "<PascalName>",
-  "description": "One-sentence description for the catalog browser.",
-  "catalogId": "copilotkit://app-dashboard-catalog",
-  "pythonTool": "agent/src/tools/<name>.py:show_<name>",
-  "schema": [
-    { "id": "root", "component": "Column", "gap": 16, "children": ["<name>-title", "<name>-column"] },
-    { "id": "<name>-title", "component": "Title", "text": { "path": "headerLabel" }, "level": "h1" },
-    { "id": "<name>-column", "component": "Column", "gap": 12, "children": { "componentId": "<name>-item", "path": "/items" } },
-    { "id": "<name>-item", "component": "Card",
-      "title": { "path": "title" },
-      "subtitle": { "path": "subtitle" }
-    }
-  ]
-}
-```
-
-Then run:
-
-```bash
-pnpm validate-widget agent/src/widgets/<name>.json
-```
-
-If it fails, the validator points at the failing field with a fix hint. Fix and re-run until green.
-
-### Step 3 — Write the fixture
-
-Create `agent/src/widgets/<name>.fixture.json`. This is a named test scenario — the data the widget will render against in tests and offline mode. Use the **canonical fixture shape** (`{surfaceId, catalogId, components, data}` — see issue #16 — one shape, validator is the authority). Mirror `agent/src/widgets/risk_register.fixture.json`:
-
-```json
-{
-  "name": "<name>_default",
-  "description": "One-sentence test scenario description.",
-  "surfaceId": "<name>",
-  "catalogId": "copilotkit://app-dashboard-catalog",
-  "components": [
-    { "id": "root", "component": "Column", "gap": 16, "children": ["<name>-title", "<name>-column"] },
-    { "id": "<name>-title", "component": "Title", "text": { "path": "headerLabel" }, "level": "h1" },
-    { "id": "<name>-column", "component": "Column", "gap": 12, "children": { "componentId": "<name>-item", "path": "/items" } },
-    { "id": "<name>-item", "component": "Card",
-      "title": { "path": "title" },
-      "subtitle": { "path": "subtitle" }
-    }
-  ],
-  "data": {
-    "headerLabel": "Demo Header · 2",
-    "items": [
-      { "title": "Sample 1", "subtitle": "Demo data" },
-      { "title": "Sample 2", "subtitle": "Demo data" }
-    ]
-  }
-}
-```
-
-Note: the `components` array is the same shape as the catalog entry's `schema` in Step 2 — fixtures inline the schema so the renderer (and `pnpm test:widgets`) can hydrate them without loading any other file. If your catalog entry changes, copy the `schema` array into the fixture's `components` array.
-
-Run `pnpm test:widgets` to confirm the fixture renders against the catalog entry.
-
-### Step 4 — Write the Python tool
-
-Create `agent/src/tools/<name>.py`. Copy the `show_risk_register` shape verbatim, then rename. Skeleton:
-
-```python
-"""Tool: show <one-sentence description>."""
-
-from __future__ import annotations
-
-from pathlib import Path
-
-from copilotkit import a2ui
-from langchain.tools import tool
-
-from src.query import cached_data
-
-CATALOG_ID = "copilotkit://app-dashboard-catalog"  # Same catalog as the rest of PortKit — do not invent a new one
-SURFACE_ID = "<name>"
-SCHEMA = a2ui.load_schema(
-    Path(__file__).parent.parent / "a2ui" / "schemas" / "<name>_schema.json"
-)
-
-
-@tool
-def show_<name>(arg: str | None = None) -> str:
-    """One-sentence description of what this widget shows.
-
-    Use for: <quoted user phrasings that should trigger this>.
-    Do NOT use for: <anti-examples>.
-    """
-    data = _build_data(arg)
-    return a2ui.render(
-        operations=[
-            a2ui.create_surface(SURFACE_ID, catalog_id=CATALOG_ID),
-            a2ui.update_components(SURFACE_ID, SCHEMA),
-            a2ui.update_data_model(SURFACE_ID, data),
-        ],
-    )
-
-
-def _build_data(arg: str | None) -> dict:
-    # Filter / enrich cached_data into the shape the widget expects.
-    ...
-    return {"headerLabel": "...", "items": [...]}
-```
-
-Key invariants — common failure mode if you miss any:
-
-- The `SURFACE_ID` used in `create_surface` MUST match the one in `update_components` and `update_data_model`. If they differ, the renderer drops the update silently.
-- The `catalog_id` MUST be a real registered catalog. `"copilotkit://app-dashboard-catalog"` is the default in this starter — do not invent a new ID unless you also register the catalog.
-- The data keys under `update_data_model` MUST match the `path` references in the catalog JSON's component tree.
-
-### Step 5 — Register the tool in the active domain
-
-Open `agent/src/domains/default/tools.py`. Find the existing imports:
-
-```python
-from src.tools.risk_register import show_risk_register
-```
-
-Append your tool:
-
-```python
-from src.tools.<name> import show_<name>
-```
-
-Then find the `default_tools = [...]` list:
-
-```python
-default_tools = [
-    query_data,
-    show_project_dashboard,
-    show_project_detail,
-    show_sprint_board,
-    show_team_load,
-    show_risk_register,
-    draft_status_report,
-    show_update_feed,
-]
-```
-
-Append your tool to that list:
-
-```python
-default_tools = [
-    query_data,
-    show_project_dashboard,
-    # ... (existing tools)
-    show_<name>,
-]
-```
-
-This is the easiest step to skip. If the tool is not in `default_tools`, the agent literally cannot call it.
-
-### Step 6 — Add the schema declaration (TS, only if `injectA2UITool` is true)
-
-Open `src/app/api/copilotkit/[[...slug]]/route.ts`. Check the runtime config:
+In `src/a2ui/catalog/definitions.ts`, add to the `definitions` object:
 
 ```ts
-a2ui: {
-  injectA2UITool: false,
+Timeline: {
+  description:
+    "Vertical list of dated events. Use for chronologies, changelogs, milestones.",
+  props: z.object({
+    events: z.union([
+      z.array(z.object({ date: z.string(), label: z.string() })),
+      z.object({ path: z.string() }),
+    ]),
+    title: stringOrPath.optional(),
+  }),
 },
 ```
 
-- **If `injectA2UITool: false`** (the starter default) — no TS schema declaration is required. The catalog JSON you wrote in Step 2 is the source of truth. Skip to Step 7.
-- **If `injectA2UITool: true`** — you must also declare the widget in a `schema` array on the runtime config. Append your catalog JSON content (or a reference to it) to `a2ui.schema`. If `a2ui.schema` doesn't exist yet, create it as an array. See `@copilotkit/runtime` docs for the exact shape; common pattern:
+Match the Zod version the repo already uses (`import { z } from "zod"` at the
+top of the file) — do not add a new zod dependency. Mismatched Zod majors make
+the binder silently treat every prop as static.
 
-  ```ts
-  a2ui: {
-    injectA2UITool: true,
-    schema: [
-      // ... existing schemas
-      { id: "<name>", catalogId: "copilotkit://app-dashboard-catalog", components: [...] },
-    ],
-  },
-  ```
+### Step 3 — Add the renderer
 
-### Step 7 — Add the prompt hint
+In `src/a2ui/catalog/renderers.tsx`, add the matching entry to the
+`renderers` map. Style it with the A2UI surface tokens from
+`src/a2ui/theme.css` (`--card`, `--border`, `--muted-foreground`, `--accent`,
+`--radius`) so it inherits any re-theme automatically. Use `recharts` for
+charts (already a dependency) — copy an existing chart renderer's shape.
 
-Open `agent/src/domains/default/prompts.py` and find the `TOOL_RULES` block:
+### Step 4 — Mirror it in the agent prompt
 
-```
-TOOL_RULES = """
-Always prefer a rich-UI tool over plain text when the user asks about state.
-
-- "what's going on / how are we doing" -> show_project_dashboard()
-- "status of X / drill into Y" -> show_project_detail(project_id)
-- "risks / what could go wrong" -> show_risk_register(project_id?)
-...
-"""
-```
-
-Append a line that teaches the agent WHEN to call your new tool:
+In `agent/src/catalog.py`, add one line to `CATALOG_PROMPT` under the right
+section heading, matching the existing format:
 
 ```
-- "<trigger phrases>" -> show_<name>(<args>)
-   (Do NOT use show_<name> for <anti-example> — use <correct-tool> instead.)
+- **Timeline** { events: [{date,label}] | {path}, title?: string|{path} }
+    Vertical list of dated events. Use for chronologies and milestones.
 ```
 
-Be concrete. The agent decides whether to call your tool based on this line. Vague hints produce vague routing. Anti-examples are especially important when two tools have overlapping trigger phrases.
+If you skip this, the component renders fine in `/catalog` but the agent
+never emits it — the prompt is the only way the LLM knows it exists.
 
-### Step 8 — Validate and smoke
+### Step 5 — (Optional) Use it in the fixed dashboard
 
-Run, in order:
+If the fixed `/fixed` dashboard should include the new component, add it to
+the hand-authored layout at `agent/src/a2ui/schemas/dashboard.json` and
+extend `render_dashboard`'s typed inputs in `agent/src/fixed_agent.py` if it
+needs new data. Then:
 
 ```bash
-pnpm validate-widget agent/src/widgets/<name>.json
-pnpm test:widgets
-pnpm smoke
+pnpm validate-widget agent/src/a2ui/schemas/dashboard.json
 ```
 
-`pnpm smoke` is the load-bearing final gate. It runs the validator over every widget, verifies pins haven't drifted, exercises the offline path, and runs a canned prompt against the live stack to assert at least one `createSurface` envelope flows. If smoke is green, you are done.
+The `/dynamic` agent needs no extra wiring — it composes from the prompt
+mirror automatically.
 
-## Procedure: Add a Dynamic-Schema Widget (fallback)
+### Step 6 — Verify
 
-Only use when the hacker explicitly asks for AI-designed UI. Most demos benefit from the predictability of fixed schema.
+```bash
+pnpm typecheck          # the Zod schema + renderer compile
+pnpm validate-widget agent/src/a2ui/schemas/dashboard.json   # if you touched it
+pnpm test:widgets
+pnpm smoke              # the load-bearing final gate
+```
 
-1. Skip Steps 2, 3, 4, 5, 6 — `generate_a2ui` is already wired.
-2. Step 7 — append a line to `TOOL_RULES` in `agent/src/domains/default/prompts.py` that tells the agent to call `generate_a2ui` for the new concept. The dynamic schema LLM reads the catalog context entries automatically.
-3. Optionally tweak the widget interactively at the [A2UI Composer](https://a2ui-composer.ag-ui.com/) and paste the JSON back as a fixed-schema widget if you want it predictable.
-4. Step 8 — still run `pnpm smoke` before declaring done.
+Then run the live check: `pnpm dev`, open `/dynamic`, and ask a question
+that should trigger the component (e.g. "show the milestones as a timeline").
+Confirm the canvas paints it and the `MirrorRenderer` pill echoes the surface.
 
-## Common Failure Modes (audit your work against this list before declaring done)
+## Scaffolding helper
 
-- **Edited only the Python tool, skipped the catalog/fixture/schema/prompt.** Most common failure. The agent calls the tool, but the renderer has no catalog entry to match against, so nothing renders.
-- **Forgot to register the tool in `default_tools`.** The tool exists as a Python function but the agent cannot see it. Silent failure — the agent just doesn't call it.
-- **Mismatched `SURFACE_ID` between `create_surface` and `update_components` / `update_data_model`.** The renderer treats them as different surfaces, so the data update lands on a surface that has no components. Result: empty render.
-- **Used an invalid `catalogId`.** Must be a real registered catalog. The default `"copilotkit://app-dashboard-catalog"` works out of the box. Custom catalogs require an extra registration step (out of scope here).
-- **Data keys in `update_data_model` don't match the `path` references in the catalog JSON.** Components bind to data via `path`. If the catalog says `path: "/items"` and the tool emits `{"things": [...]}`, the UI shows nothing.
-- **Forgot the prompt hint.** Tool is wired, catalog exists, fixture passes — but the agent never calls the tool because nothing in `TOOL_RULES` tells it when. Especially common when the trigger phrase is domain-specific.
-- **Bumped a `@copilotkit/*` version.** The pre-commit hook will reject the commit. If you see "version drift" in the hook output, revert `package.json` and `pnpm-lock.yaml`.
-- **Skipped `pnpm smoke`.** Smoke is the canonical "is this done?" signal. Skipping it means you don't actually know if the widget renders end-to-end. Always run it.
+`pnpm new-widget <name>` seeds a catalog schema + fixture JSON pair under
+`agent/src/a2ui/schemas/` and prints these same next steps. It's optional —
+the JSON files matter only if you want the component exercised by
+`pnpm test:widgets` / a fixed layout; the TypeScript catalog is the source
+of truth.
 
-## Quick Checklist (paste this into the chat as a TODO before starting)
+## Common Failure Modes (audit before declaring done)
 
-- [ ] Step 1: read `agent/src/tools/risk_register.py:show_risk_register` as the canonical reference
-- [ ] Step 2: write `agent/src/widgets/<name>.json` (catalog entry)
-- [ ] Step 3: write `agent/src/widgets/<name>.fixture.json` (test scenario)
-- [ ] Step 4: write `agent/src/tools/<name>.py` (Python tool)
-- [ ] Step 5: register the tool in `agent/src/domains/default/tools.py` `default_tools`
-- [ ] Step 6: add TS schema declaration to `src/app/api/copilotkit/[[...slug]]/route.ts` (only if `injectA2UITool: true`)
-- [ ] Step 7: add prompt hint to `agent/src/domains/default/prompts.py` `TOOL_RULES`
-- [ ] Step 8: `pnpm validate-widget`, `pnpm test:widgets`, `pnpm smoke` — all green
+- **Added the definition but not the prompt mirror.** The agent never emits
+  the component. Most common failure in this layout.
+- **Added the definition but no renderer (or vice versa).** The surface
+  arrives but that node renders nothing. Definition and renderer keys must
+  match exactly (case-sensitive).
+- **Invented a new `CATALOG_ID`.** `createSurface` resolves renderers by
+  catalog ID; `src/a2ui/catalog/definitions.ts` and `agent/src/catalog.py`
+  must keep the identical ID.
+- **Used `{path}` bindings on props whose schema doesn't accept them.** Wrap
+  the prop type with the `stringOrPath`-style union if it should be bindable.
+- **Data keys don't match the `path` references.** If the component binds
+  `{ "path": "/items" }`, the agent must put `items` at the data-model root
+  via `updateDataModel`.
+- **Followed the archived PortKit flow** (`agent/src/widgets/*.json` +
+  `agent/src/tools/*.py` + `domains/default/tools.py`). Those paths don't
+  exist in the live repo — if you find yourself creating them, stop and
+  re-read "The catalog model" above.
+- **Bumped a `@copilotkit/*` version.** The pre-commit hook rejects the
+  commit. Revert `package.json` and `pnpm-lock.yaml`.
+- **Skipped `pnpm smoke`.** Smoke is the canonical "is this done?" signal.
+
+## Quick Checklist (paste into the chat as a TODO before starting)
+
+- [ ] Step 1: read `src/a2ui/catalog/definitions.ts` + `renderers.tsx`
+- [ ] Step 2: add the definition (description + Zod props)
+- [ ] Step 3: add the React renderer (A2UI surface tokens, recharts if a chart)
+- [ ] Step 4: mirror a one-line summary in `agent/src/catalog.py` `CATALOG_PROMPT`
+- [ ] Step 5 (optional): wire into `agent/src/a2ui/schemas/dashboard.json` + `fixed_agent.py`
+- [ ] Step 6: `pnpm typecheck`, `pnpm validate-widget` (for JSON), `pnpm test:widgets`, `pnpm smoke` — all green
 
 ## Canonical References
 
-- Fixed-schema template (minimal): `agent/src/tools/risk_register.py:show_risk_register`
-- Fixed-schema template (heavier showcase): `agent/src/tools/project_dashboard.py:show_project_dashboard`
-- Dynamic-schema template: `agent/src/a2ui_dynamic_schema.py:generate_a2ui`
-- Catalog JSON shape: `agent/src/widgets/risk_register.json`
-- Fixture JSON shape: `agent/src/widgets/risk_register.fixture.json`
-- Hard rules and seam map: `AGENTS.md` (also accessible as `CLAUDE.md` / `GEMINI.md`)
-- Hour-by-hour build template: `HACKATHON.md` § Seam #4
+- Live catalog definitions: `src/a2ui/catalog/definitions.ts`
+- Live catalog renderers: `src/a2ui/catalog/renderers.tsx`
+- Agent prompt mirror: `agent/src/catalog.py` (`CATALOG_ID` + `CATALOG_PROMPT`)
+- Fixed dashboard layout: `agent/src/a2ui/schemas/dashboard.json` (+ `agent/src/fixed_agent.py`)
+- Dynamic-schema flow: `agent/src/dynamic_agent.py` (`generate_a2ui`)
+- Hard rules and seam map: `AGENTS.md` (also `CLAUDE.md` / `GEMINI.md`)
+- Recipe: `HACKATHON.md` §4
 - Pinned versions: `FROZEN.md`
 - A2UI v0.9 spec: https://a2ui.org/specification/v0.9-a2ui/
 - A2UI Composer: https://a2ui-composer.ag-ui.com/
+- Archived PortKit widget flow (do NOT follow at root): `other-examples/portkit/`

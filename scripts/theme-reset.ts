@@ -1,72 +1,89 @@
 #!/usr/bin/env node
 /**
- * pnpm theme:reset — Revert src/lib/a2ui-theme.css to base defaults.
+ * pnpm theme:reset — Revert the Seam #1 theme files to the committed
+ * baseline.
  *
- * On first run, snapshots the current a2ui-theme.css into
- * src/lib/.a2ui-theme.original.css (a hidden backup committed to the repo so
- * the snapshot survives across clones). Subsequent runs restore from the
- * backup.
+ * Baselines live in scripts/theme-baseline/ and are COMMITTED to the repo,
+ * so the panic button works on a fresh clone even after you've broken the
+ * theme (no first-run snapshot dance — the old behavior could snapshot an
+ * already-broken theme as "original").
  *
- * If something is too broken to fix manually mid-build, `pnpm theme:reset` is
- * the panic button.
+ * Files restored:
+ *   src/a2ui/theme.css             ← scripts/theme-baseline/theme.css
+ *   src/app/(pdf)/pdf-analyst.css  ← scripts/theme-baseline/pdf-analyst.css
+ *   src/lib/a2ui-theme.css         ← scripts/theme-baseline/a2ui-theme.css
+ *
+ * If something is too broken to fix manually mid-build, `pnpm theme:reset`
+ * is the panic button.
  */
-import {
-  copyFileSync,
-  existsSync,
-  readFileSync,
-  writeFileSync,
-} from "node:fs";
+import { copyFileSync, existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const REPO_ROOT = join(__dirname, "..");
-const THEME_PATH = join(REPO_ROOT, "src", "lib", "a2ui-theme.css");
-const BACKUP_PATH = join(REPO_ROOT, "src", "lib", ".a2ui-theme.original.css");
+const BASELINE_DIR = join(REPO_ROOT, "scripts", "theme-baseline");
+
+// [live path, baseline filename]
+const TARGETS: Array<[string, string]> = [
+  [join(REPO_ROOT, "src", "a2ui", "theme.css"), "theme.css"],
+  [join(REPO_ROOT, "src", "app", "(pdf)", "pdf-analyst.css"), "pdf-analyst.css"],
+  [join(REPO_ROOT, "src", "lib", "a2ui-theme.css"), "a2ui-theme.css"],
+];
 
 const RED = "\x1b[31m";
 const GREEN = "\x1b[32m";
-const YELLOW = "\x1b[33m";
 const DIM = "\x1b[2m";
 const BOLD = "\x1b[1m";
 const RESET = "\x1b[0m";
 
 function main(): void {
-  if (!existsSync(THEME_PATH)) {
-    console.error(`${RED}✗${RESET} ${THEME_PATH} not found.`);
-    console.error(`  ${DIM}Expected to find the A2UI theme CSS at this path.${RESET}`);
+  let restored = 0;
+  let clean = 0;
+  let failed = 0;
+
+  for (const [livePath, baselineName] of TARGETS) {
+    const baselinePath = join(BASELINE_DIR, baselineName);
+
+    if (!existsSync(baselinePath)) {
+      console.error(`${RED}✗${RESET} Baseline missing: ${baselinePath}`);
+      console.error(
+        `  ${DIM}Restore it from git: git checkout -- scripts/theme-baseline/${RESET}`,
+      );
+      failed++;
+      continue;
+    }
+    if (!existsSync(livePath)) {
+      console.error(`${RED}✗${RESET} Theme file missing: ${livePath}`);
+      failed++;
+      continue;
+    }
+
+    const current = readFileSync(livePath, "utf-8");
+    const baseline = readFileSync(baselinePath, "utf-8");
+    if (current === baseline) {
+      console.log(`${GREEN}✓${RESET} ${DIM}already baseline:${RESET} ${livePath}`);
+      clean++;
+      continue;
+    }
+
+    copyFileSync(baselinePath, livePath);
+    console.log(`${GREEN}✓${RESET} restored: ${livePath}`);
+    restored++;
+  }
+
+  console.log();
+  if (failed > 0) {
+    console.error(`${RED}${BOLD}Theme reset incomplete${RESET} (${failed} file(s) could not be restored).`);
     process.exit(1);
   }
-
-  if (!existsSync(BACKUP_PATH)) {
-    // First run — take a snapshot.
-    copyFileSync(THEME_PATH, BACKUP_PATH);
-    console.log(`${YELLOW}!${RESET} First run: snapshotted current theme to`);
-    console.log(`  ${DIM}${BACKUP_PATH}${RESET}`);
-    console.log(`  ${DIM}Subsequent \`pnpm theme:reset\` invocations will restore from this snapshot.${RESET}`);
+  if (restored === 0) {
+    console.log(`${GREEN}${BOLD}Theme already matches the baseline — nothing to revert.${RESET}`);
+  } else {
+    console.log(`${GREEN}${BOLD}Theme reset.${RESET} ${DIM}(${restored} restored, ${clean} already clean)${RESET}`);
     console.log(
-      `${GREEN}${BOLD}Theme is now the baseline.${RESET} ${DIM}(no change applied; backup created)${RESET}`,
+      `${DIM}If the panic button didn't help, check src/components/pdf-analyst/Brand.tsx${RESET}`,
     );
-    process.exit(0);
+    console.log(`${DIM}(Seam #2 — re-brand the shell) and src/app/globals.css.${RESET}`);
   }
-
-  // Backup exists — check if theme already matches.
-  const current = readFileSync(THEME_PATH, "utf-8");
-  const backup = readFileSync(BACKUP_PATH, "utf-8");
-
-  if (current === backup) {
-    console.log(`${GREEN}✓${RESET} Theme already matches the backup — nothing to revert.`);
-    process.exit(0);
-  }
-
-  // Restore.
-  writeFileSync(THEME_PATH, backup);
-  console.log(`${GREEN}${BOLD}Theme reset.${RESET}`);
-  console.log(`  ${DIM}Restored:${RESET} ${THEME_PATH}`);
-  console.log(`  ${DIM}From:${RESET}     ${BACKUP_PATH}`);
-  console.log();
-  console.log(
-    `${DIM}If the panic button didn't help, check src/components/BrandFrame.tsx${RESET}`,
-  );
-  console.log(`${DIM}(Seam #2 — re-brand the shell) and any custom Tailwind config.${RESET}`);
   process.exit(0);
 }
 

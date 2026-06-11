@@ -1,5 +1,13 @@
 """Fixed-schema dashboard agent.
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CUSTOMIZATION SEAM #5 — Swap the agent flow (fixed-schema dashboard)
+See HACKATHON.md §5 for the full recipe. For a different fixed dashboard,
+rewrite the layout JSON at agent/src/a2ui/schemas/dashboard.json and the
+`render_dashboard` tool's typed inputs; reword the system prompt for your
+domain. The dynamic Q&A flow lives in dynamic_agent.py.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 The user attaches a PDF in the chat. The deep agent reads the PDF text
 (inlined into the user message by InlineDocumentsMiddleware) and calls
 `render_dashboard` with the structured data extracted in the same model
