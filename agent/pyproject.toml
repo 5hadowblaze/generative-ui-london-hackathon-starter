@@ -11,5 +11,6 @@ dependencies = [
   "langchain-google-genai>=4.2.4",
   "langgraph==1.2.1",
   "python-dotenv>=1.2.2",
+  "redis>=5.0",
   "uvicorn>=0.48.0",
 ]

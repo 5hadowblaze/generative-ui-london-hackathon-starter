@@ -1,7 +1,8 @@
 "use client";
 
 import { clsx } from "clsx";
-import type { ReactNode } from "react";
+import { Fragment, useState } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import {
   Bar,
   BarChart as RBarChart,
@@ -124,6 +125,22 @@ const autoDelta = (value?: string, caption?: string): string | null => {
   // 1 decimal for sub-10% movements, integer otherwise: easier to scan.
   return `${sign}${Math.abs(pct) < 10 ? pct.toFixed(1) : pct.toFixed(0)}%`;
 };
+
+const activationKeys = new Set(["Enter", " "]);
+
+function onKeyboardActivate(
+  event: KeyboardEvent<HTMLElement>,
+  activate: () => void,
+) {
+  if (!activationKeys.has(event.key)) return;
+  event.preventDefault();
+  activate();
+}
+
+function firstMeaningfulRecordValue(row: Record<string, string | number>) {
+  const first = Object.entries(row).find(([, value]) => value != null);
+  return first ? String(first[1]) : "Row detail";
+}
 
 const Stack = ({
   props,
@@ -328,6 +345,7 @@ const Callout = ({
   title?: string;
   tone?: "info" | "positive" | "warning" | "neutral";
 }>) => {
+  const [expanded, setExpanded] = useState(false);
   const tone = props.tone ?? "info";
   const accents: Record<
     typeof tone,
@@ -358,27 +376,49 @@ const Callout = ({
   return (
     <div
       className={clsx(
-        "relative rounded-[var(--radius)] border border-[var(--line)] pl-4 pr-5 py-4 flex flex-col gap-1.5 overflow-hidden",
+        "rho-interactive-callout relative rounded-[var(--radius)] border border-[var(--line)] pl-4 pr-5 py-4 flex flex-col gap-1.5 overflow-hidden",
         a.bg,
       )}
+      data-expanded={expanded ? "true" : "false"}
     >
       <span
         aria-hidden
         className={clsx("absolute left-0 top-0 bottom-0 w-1", a.bar)}
       />
-      {props.title && (
-        <span
-          className={clsx(
-            "mono text-[10.5px] uppercase tracking-[0.14em] font-medium",
-            a.chip,
-          )}
-        >
-          {props.title}
+      <button
+        type="button"
+        className="rho-disclosure-trigger text-left"
+        aria-expanded={expanded}
+        onClick={() => setExpanded((current) => !current)}
+      >
+        {props.title && (
+          <span
+            className={clsx(
+              "mono text-[10.5px] uppercase tracking-[0.14em] font-medium",
+              a.chip,
+            )}
+          >
+            {props.title}
+          </span>
+        )}
+        <span className="rho-disclosure-caret" aria-hidden>
+          {expanded ? "Hide detail" : "Reveal detail"}
         </span>
-      )}
+      </button>
       <span className="text-[13.5px] leading-relaxed text-[var(--ink-2)]">
         {props.body}
       </span>
+      {expanded && (
+        <div className="rho-reveal-panel">
+          <span className="mono text-[10.5px] uppercase tracking-[0.08em] text-[var(--ink)]">
+            Contextual next step
+          </span>
+          <p className="mt-1 text-[12.5px] leading-relaxed text-[var(--ink-2)]">
+            Tone: {tone}. {props.title ? `Title: ${props.title}. ` : ""}
+            Body: {props.body}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
@@ -429,6 +469,7 @@ const StatCard = ({
   deltaTone?: "positive" | "negative" | "neutral";
   caption?: string;
 }>) => {
+  const [expanded, setExpanded] = useState(false);
   // Prefer the agent's delta. Fall back to auto-computing from value vs.
   // the prior number in caption when the agent left delta blank.
   const explicitDelta = hasMeaningfulDelta(props.delta)
@@ -467,11 +508,30 @@ const StatCard = ({
         : "→";
 
   return (
-    <div className="rounded-[var(--radius)] border border-[var(--line)] bg-[var(--surface)] p-5 flex flex-col gap-2.5">
-      <span className="mono text-[10.5px] uppercase tracking-[0.14em] text-[var(--ink)] font-medium">
-        {props.label}
-      </span>
-      <div className="flex items-baseline justify-between gap-3 flex-wrap">
+    <div
+      className="rho-interactive-card rounded-[var(--radius)] border border-[var(--line)] bg-[var(--surface)] p-5 flex flex-col gap-2.5"
+      data-expanded={expanded ? "true" : "false"}
+    >
+      <button
+        type="button"
+        className="rho-disclosure-trigger text-left"
+        aria-expanded={expanded}
+        onClick={() => setExpanded((current) => !current)}
+      >
+        <span className="mono text-[10.5px] uppercase tracking-[0.14em] text-[var(--ink)] font-medium">
+          {props.label}
+        </span>
+        <span className="rho-disclosure-caret" aria-hidden>
+          {expanded ? "Hide detail" : "Reveal detail"}
+        </span>
+      </button>
+      <button
+        type="button"
+        className="flex items-baseline justify-between gap-3 flex-wrap text-left"
+        aria-label={`Toggle details for ${props.label}`}
+        aria-expanded={expanded}
+        onClick={() => setExpanded((current) => !current)}
+      >
         <span className="text-[28px] font-semibold tracking-tight text-[var(--ink)] leading-none tabular-nums">
           {props.value}
         </span>
@@ -486,11 +546,23 @@ const StatCard = ({
             {finalDelta}
           </span>
         )}
-      </div>
+      </button>
       {props.caption && (
         <span className="text-[12px] text-[var(--ink)] leading-snug">
           {props.caption}
         </span>
+      )}
+      {expanded && (
+        <div className="rho-reveal-panel">
+          <span className="mono text-[10.5px] uppercase tracking-[0.08em] text-[var(--ink)]">
+            Why this metric matters
+          </span>
+          <p className="mt-1 text-[12.5px] leading-relaxed text-[var(--ink-2)]">
+            Label: {props.label}. Value: {props.value}
+            {finalDelta ? `. Delta: ${finalDelta}` : ""}
+            {props.caption ? `. Caption: ${props.caption}` : ""}
+          </p>
+        </div>
       )}
     </div>
   );
@@ -888,6 +960,10 @@ const DataTable = ({
 }>) => {
   const columns = props.columns ?? [];
   const rows = props.rows ?? [];
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
+  const toggleRow = (index: number) => {
+    setExpandedRow((current) => (current === index ? null : index));
+  };
   return (
     <div className="overflow-x-auto rounded-[var(--radius)] border border-[var(--line)] bg-[var(--surface)]">
       <table className="w-full text-[13.5px] border-collapse">
@@ -908,57 +984,99 @@ const DataTable = ({
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, i) => (
-            <tr
-              key={i}
-              className={clsx(
-                "border-b border-[var(--line-2)] last:border-b-0 transition-colors hover:bg-[var(--surface-soft)]",
-              )}
-            >
-              {columns.map((c) => {
-                const raw = row[c.key];
-                const text = raw == null ? "" : String(raw);
-                const looksLikeDelta = c.key === "delta" || c.key === "Δ";
-                const meaningful = !looksLikeDelta || hasMeaningfulDelta(text);
-                if (looksLikeDelta && meaningful) {
-                  const tone = text.trim().startsWith("-")
-                    ? "text-[#7a1b22]"
-                    : text.trim().startsWith("+")
-                      ? "text-[#0a5d44]"
-                      : "text-[var(--ink-2)]";
-                  return (
-                    <td
-                      key={c.key}
-                      className={clsx(
-                        "px-4 py-3 tabular-nums mono text-[12px] font-medium",
-                        c.align === "right" ? "text-right" : "text-left",
-                        tone,
-                      )}
-                    >
-                      {text}
+          {rows.map((row, i) => {
+            const rowText = columns
+              .map((column) => String(row[column.key] ?? ""))
+              .filter(Boolean)
+              .join(" · ");
+            const expanded = expandedRow === i;
+            return (
+              <Fragment key={`row-group-${i}`}>
+                <tr
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={expanded}
+                  className={clsx(
+                    "rho-table-row border-b border-[var(--line-2)] last:border-b-0 transition-colors hover:bg-[var(--surface-soft)]",
+                    expanded && "rho-table-row--expanded bg-[var(--surface-soft)]",
+                  )}
+                  onClick={() => toggleRow(i)}
+                  onKeyDown={(event) => onKeyboardActivate(event, () => toggleRow(i))}
+                >
+                  {columns.map((c, columnIndex) => {
+                    const raw = row[c.key];
+                    const text = raw == null ? "" : String(raw);
+                    const looksLikeDelta = c.key === "delta" || c.key === "Δ";
+                    const meaningful = !looksLikeDelta || hasMeaningfulDelta(text);
+                    if (looksLikeDelta && meaningful) {
+                      const tone = text.trim().startsWith("-")
+                        ? "text-[#7a1b22]"
+                        : text.trim().startsWith("+")
+                          ? "text-[#0a5d44]"
+                          : "text-[var(--ink-2)]";
+                      return (
+                        <td
+                          key={c.key}
+                          className={clsx(
+                            "px-4 py-3 tabular-nums mono text-[12px] font-medium",
+                            c.align === "right" ? "text-right" : "text-left",
+                            tone,
+                          )}
+                        >
+                          {text}
+                        </td>
+                      );
+                    }
+                    return (
+                      <td
+                        key={c.key}
+                        className={clsx(
+                          "px-4 py-3 text-[var(--ink-2)]",
+                          c.align === "right"
+                            ? "text-right tabular-nums mono text-[13px]"
+                            : "text-left",
+                        )}
+                      >
+                        {meaningful && columnIndex === 0 ? (
+                          <button
+                            type="button"
+                            className="rho-table-row-toggle text-left"
+                            aria-expanded={expanded}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              toggleRow(i);
+                            }}
+                          >
+                            {text}
+                          </button>
+                        ) : meaningful ? (
+                          (text as ReactNode)
+                        ) : (
+                          <span className="text-[var(--ink)]">. </span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+                {expanded && (
+                  <tr className="rho-table-row-detail">
+                    <td colSpan={Math.max(columns.length, 1)} className="px-4 py-3">
+                      <div className="rho-reveal-panel">
+                        <span className="mono text-[10.5px] uppercase tracking-[0.08em] text-[var(--ink)]">
+                          Policy and tool implication
+                        </span>
+                        <p className="mt-1 text-[12.5px] leading-relaxed text-[var(--ink-2)]">
+                          {rowText || firstMeaningfulRecordValue(row)}. Use this row to
+                          decide whether the case can move forward, needs more customer
+                          evidence, or must stay outside tool execution.
+                        </p>
+                      </div>
                     </td>
-                  );
-                }
-                return (
-                  <td
-                    key={c.key}
-                    className={clsx(
-                      "px-4 py-3 text-[var(--ink-2)]",
-                      c.align === "right"
-                        ? "text-right tabular-nums mono text-[13px]"
-                        : "text-left",
-                    )}
-                  >
-                    {meaningful ? (
-                      (text as ReactNode)
-                    ) : (
-                      <span className="text-[var(--ink)]">. </span>
-                    )}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
+                  </tr>
+                )}
+              </Fragment>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -1045,6 +1163,593 @@ const ChoiceChips = ({
   );
 };
 
+type RelayNode = {
+  id: string;
+  label: string;
+  role: string;
+  status: "idle" | "active" | "complete" | "blocked";
+};
+
+type RelayEdge = {
+  from: string;
+  to: string;
+  label: string;
+  status: "pending" | "active" | "complete" | "blocked";
+};
+
+type PolicySource = {
+  id: string;
+  title: string;
+  source: string;
+  excerpt: string;
+  url?: string;
+};
+
+const STATUS_TONE = {
+  idle: "border-[var(--line)] bg-[var(--surface)] text-[var(--ink-2)]",
+  pending: "border-[var(--line)] bg-[var(--surface)] text-[var(--ink-2)]",
+  active:
+    "border-[color-mix(in_oklab,var(--lilac)_65%,white)] bg-[color-mix(in_oklab,var(--lilac)_12%,white)] text-[#2e2c75]",
+  complete:
+    "border-[color-mix(in_oklab,var(--mint)_65%,white)] bg-[color-mix(in_oklab,var(--mint)_12%,white)] text-[#0a5d44]",
+  blocked:
+    "border-[color-mix(in_oklab,var(--orange)_65%,white)] bg-[color-mix(in_oklab,var(--orange)_12%,white)] text-[#7a3f0f]",
+  failed:
+    "border-[color-mix(in_oklab,var(--red)_55%,white)] bg-[color-mix(in_oklab,var(--red)_10%,white)] text-[#7a1b22]",
+  proposed:
+    "border-[var(--line)] bg-[var(--surface-soft)] text-[var(--ink-2)]",
+  running:
+    "border-[color-mix(in_oklab,var(--lilac)_65%,white)] bg-[color-mix(in_oklab,var(--lilac)_12%,white)] text-[#2e2c75]",
+  low: "border-[color-mix(in_oklab,var(--mint)_65%,white)] bg-[color-mix(in_oklab,var(--mint)_12%,white)] text-[#0a5d44]",
+  medium:
+    "border-[color-mix(in_oklab,var(--orange)_65%,white)] bg-[color-mix(in_oklab,var(--orange)_12%,white)] text-[#7a3f0f]",
+  high: "border-[color-mix(in_oklab,var(--red)_55%,white)] bg-[color-mix(in_oklab,var(--red)_10%,white)] text-[#7a1b22]",
+} as const;
+
+function StatusPill({
+  label,
+  tone,
+}: {
+  label: string;
+  tone: keyof typeof STATUS_TONE;
+}) {
+  return (
+    <span
+      className={clsx(
+        "inline-flex items-center rounded-md border px-1.5 py-0.5 mono text-[10.5px] font-medium uppercase tracking-[0.08em]",
+        STATUS_TONE[tone],
+      )}
+    >
+      {label}
+    </span>
+  );
+}
+
+const SOURCE_LANES = [
+  "Bank policy",
+  "Public evidence",
+  "Memory",
+  "Agent response",
+] as const;
+
+type SourceLane = (typeof SOURCE_LANES)[number];
+
+function sourceLane(source: PolicySource): SourceLane {
+  const haystack = `${source.id} ${source.title} ${source.source}`.toLowerCase();
+  if (haystack.includes("redis") || haystack.includes("memory")) {
+    return "Memory";
+  }
+  if (haystack.includes("a2a") || haystack.includes("agent")) {
+    return "Agent response";
+  }
+  if (
+    haystack.includes("linkup") ||
+    haystack.includes("public") ||
+    haystack.includes("web")
+  ) {
+    return "Public evidence";
+  }
+  return "Bank policy";
+}
+
+function laneRole(lane: SourceLane) {
+  return {
+    "Bank policy":
+      "Bank policy anchors the permitted support path and tool boundary.",
+    "Public evidence":
+      "Public evidence provides external context returned by the configured evidence integration.",
+    Memory:
+      "Memory shows whether case state was persisted or rehydrated for this context.",
+    "Agent response":
+      "Agent response contains returned protocol artifacts, not hidden chain-of-thought.",
+  }[lane];
+}
+
+function receiptNextAction(status: ToolActionCardProps["status"]) {
+  return {
+    proposed: "Collect approval before execution.",
+    running: "Wait for the tool result, then generate the receipt.",
+    complete: "Export the audit receipt.",
+    blocked: "Resolve the listed blocker before retrying.",
+    failed: "Review the failure, then retry only with valid context.",
+  }[status];
+}
+
+function receiptNotPerformed(
+  status: ToolActionCardProps["status"],
+  toolName: string,
+) {
+  if (status === "complete") return "None.";
+  if (status === "running") return "Final mutation has not completed.";
+  return `${toolName} was not performed.`;
+}
+
+function receiptReason(
+  label: string,
+  status: ToolActionCardProps["status"],
+) {
+  if (label === "Required tech used") {
+    return "This row summarizes the visible tool context for review.";
+  }
+  if (label === "Tool status") {
+    return `The tool status is ${status}.`;
+  }
+  if (label === "Next safe action") {
+    return `This follows from the ${status} status and is displayed for review only.`;
+  }
+  return `This row records what was not performed while status is ${status}.`;
+}
+
+type ToolActionCardProps = {
+  actor: "personal" | "customer_service" | "system";
+  toolName: string;
+  arguments: { key: string; value: string }[];
+  status: "proposed" | "running" | "complete" | "blocked" | "failed";
+  resultSummary: string;
+  riskLevel: "low" | "medium" | "high";
+};
+
+const AgentRelayMap = ({
+  props,
+}: RendererProps<{
+  nodes: RelayNode[];
+  edges: RelayEdge[];
+  activeNodeId?: string;
+  contextId: string;
+}>) => {
+  const nodes = props.nodes ?? [];
+  const edges = props.edges ?? [];
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(
+    props.activeNodeId ?? nodes[0]?.id ?? null,
+  );
+  const [selectedEdgeIndex, setSelectedEdgeIndex] = useState<number | null>(null);
+  const liveA2aAttached =
+    nodes.some((node) => node.id === "live-a2a") ||
+    edges.some((edge) => /a2a/i.test(`${edge.from} ${edge.to} ${edge.label}`));
+  return (
+    <div
+      className={clsx(
+        "rho-proc-block rho-relay-map rounded-[var(--radius)] border border-[var(--line)] bg-[var(--surface)] p-4",
+        liveA2aAttached && "rho-relay-map--live-a2a-attached",
+      )}
+    >
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] pb-3">
+        <div>
+          <h3 className="text-[15px] font-semibold text-[var(--ink)]">
+            Agent relay
+          </h3>
+          <p className="mt-0.5 mono text-[11px] text-[var(--ink)]">
+            context {props.contextId}
+          </p>
+        </div>
+        <div className="flex flex-wrap justify-end gap-1.5">
+          <StatusPill label="A2A" tone="active" />
+          {liveA2aAttached && (
+            <StatusPill label="Live A2A attached" tone="complete" />
+          )}
+        </div>
+      </div>
+      <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {nodes.map((node) => {
+            const isActive =
+              node.id === props.activeNodeId || node.status === "active";
+            const isLiveA2a = node.id === "live-a2a";
+            const selected = node.id === selectedNodeId;
+            return (
+              <button
+                key={node.id}
+                type="button"
+                aria-expanded={selected}
+                onClick={() => {
+                  setSelectedNodeId((current) =>
+                    current === node.id ? null : node.id,
+                  );
+                  setSelectedEdgeIndex(null);
+                }}
+                className={clsx(
+                  "rho-proc-item rho-relay-node rounded-[8px] border p-3 text-left",
+                  `rho-relay-node--${node.status}`,
+                  isLiveA2a && "rho-relay-node--live-a2a",
+                  selected && "rho-relay-node--selected",
+                  isActive
+                    ? "rho-relay-node--active-pulse border-[var(--ink)] bg-[var(--surface-soft)]"
+                    : "border-[var(--line)] bg-[var(--surface)]",
+                )}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="truncate text-[13px] font-semibold text-[var(--ink)]">
+                      {node.label}
+                    </div>
+                    <div className="mt-1 text-[12px] text-[var(--ink)]">
+                      {node.role}
+                    </div>
+                  </div>
+                  <StatusPill label={node.status} tone={node.status} />
+                </div>
+                {isActive && (
+                  <span
+                    aria-hidden
+                    className="rho-relay-node__pulse"
+                  />
+                )}
+                {selected && (
+                  <div className="rho-reveal-panel mt-3">
+                    <span className="mono text-[10.5px] uppercase tracking-[0.08em] text-[var(--ink)]">
+                      Relay detail
+                    </span>
+                    <p className="mt-1 text-[12.5px] leading-relaxed text-[var(--ink-2)]">
+                      {node.label} is the {node.role.toLowerCase()} for context{" "}
+                      <span className="mono text-[11px]">{props.contextId}</span>.
+                      Status is {node.status}.{" "}
+                      {isLiveA2a
+                        ? "This node represents the attached protocol artifact, not hidden reasoning."
+                        : "Use this node to understand which actor owns the next safe handoff."}
+                    </p>
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <ol className="flex flex-col gap-2">
+          {edges.map((edge, index) => {
+            const selected = selectedEdgeIndex === index;
+            const isLiveEdge = /a2a/i.test(`${edge.from} ${edge.to} ${edge.label}`);
+            return (
+              <li
+                key={`${edge.from}-${edge.to}-${index}`}
+                className={clsx(
+                  "rho-proc-item rho-relay-edge rounded-[8px] border border-[var(--line)] bg-[var(--surface-soft)] p-2.5",
+                  `rho-relay-edge--${edge.status}`,
+                  edge.status === "complete" && "rho-relay-edge--draw-in",
+                  isLiveEdge && "rho-relay-edge--live-a2a",
+                  selected && "rho-relay-edge--selected",
+                )}
+              >
+                <button
+                  type="button"
+                  className="w-full text-left"
+                  aria-expanded={selected}
+                  onClick={() => {
+                    setSelectedEdgeIndex((current) =>
+                      current === index ? null : index,
+                    );
+                    setSelectedNodeId(null);
+                  }}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="mono text-[11px] text-[var(--ink)]">
+                      {edge.from} → {edge.to}
+                    </span>
+                    <StatusPill label={edge.status} tone={edge.status} />
+                  </div>
+                  <p className="mt-1 text-[12px] leading-snug text-[var(--ink-2)]">
+                    {edge.label}
+                  </p>
+                </button>
+                {selected && (
+                  <div className="rho-reveal-panel mt-2">
+                    <span className="mono text-[10.5px] uppercase tracking-[0.08em] text-[var(--ink)]">
+                      Handoff detail
+                    </span>
+                    <p className="mt-1 text-[12.5px] leading-relaxed text-[var(--ink-2)]">
+                      This {edge.status} handoff links {edge.from} to {edge.to}
+                      for context{" "}
+                      <span className="mono text-[11px]">{props.contextId}</span>.
+                      {isLiveEdge
+                        ? " It attaches the returned A2A protocol artifact only."
+                        : " Review this edge before trusting the next tool gate."}
+                    </p>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </div>
+  );
+};
+
+const ToolActionCard = ({ props }: RendererProps<ToolActionCardProps>) => {
+  const args = props.arguments ?? [];
+  const [selectedArg, setSelectedArg] = useState<string | null>(
+    args[0]?.key ?? null,
+  );
+  const [selectedReceipt, setSelectedReceipt] = useState<string | null>(
+    "Next safe action",
+  );
+  const actorLabel = {
+    personal: "Personal agent",
+    customer_service: "CS agent",
+    system: "System",
+  }[props.actor];
+  const requiredTechUsed =
+    props.toolName === "configure_required_hackathon_integrations"
+      ? args.length
+        ? args.map((arg) => arg.key).join(", ")
+        : "A2A, Redis, LinkUp"
+      : `${props.toolName}; ${actorLabel}; ${props.riskLevel} risk`;
+  const receiptRows = [
+    ["Required tech used", requiredTechUsed],
+    ["Tool status", props.status],
+    ["Next safe action", receiptNextAction(props.status)],
+    ["Not performed", receiptNotPerformed(props.status, props.toolName)],
+  ];
+  return (
+    <div
+      className={clsx(
+        "rho-proc-block rho-tool-card rho-receipt-card rounded-[var(--radius)] border border-[var(--line)] bg-[var(--surface)] p-4",
+        `rho-receipt-card--${props.status}`,
+      )}
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--line)] pb-3">
+        <div>
+          <div className="mono text-[10.5px] uppercase tracking-[0.08em] text-[var(--ink)]">
+            Tool action
+          </div>
+          <h3 className="text-[15px] font-semibold text-[var(--ink)]">
+            {props.toolName}
+          </h3>
+          <p className="mt-0.5 text-[12px] text-[var(--ink)]">{actorLabel}</p>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          <StatusPill label={props.status} tone={props.status} />
+          <StatusPill label={`${props.riskLevel} risk`} tone={props.riskLevel} />
+        </div>
+      </div>
+      <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+        {args.map((arg) => (
+          <button
+            key={arg.key}
+            type="button"
+            aria-expanded={selectedArg === arg.key}
+            onClick={() =>
+              setSelectedArg((current) => (current === arg.key ? null : arg.key))
+            }
+            className="rho-proc-item rho-tool-arg rounded-[8px] border border-[var(--line)] bg-[var(--surface-soft)] px-3 py-2 text-left"
+          >
+            <dt className="mono text-[10.5px] uppercase tracking-[0.08em] text-[var(--ink)]">
+              {arg.key}
+            </dt>
+            <dd className="mt-0.5 truncate text-[13px] text-[var(--ink-2)]">
+              {arg.value}
+            </dd>
+            {selectedArg === arg.key && (
+              <dd className="rho-reveal-panel mt-2">
+                <span className="mono text-[10.5px] uppercase tracking-[0.08em] text-[var(--ink)]">
+                  Tool implication
+                </span>
+                <span className="mt-1 block text-[12.5px] leading-relaxed text-[var(--ink-2)]">
+                  {arg.key}: {arg.value}. Tool status: {props.status}. Risk:{" "}
+                  {props.riskLevel}.
+                </span>
+              </dd>
+            )}
+          </button>
+        ))}
+      </dl>
+      <p className="mt-3 text-[13px] leading-relaxed text-[var(--ink-2)]">
+        {props.resultSummary}
+      </p>
+      <dl className="rho-receipt-grid mt-3 grid gap-2 sm:grid-cols-2">
+        {receiptRows.map(([label, value]) => (
+          <button
+            key={label}
+            type="button"
+            aria-expanded={selectedReceipt === label}
+            onClick={() =>
+              setSelectedReceipt((current) =>
+                current === label ? null : label,
+              )
+            }
+            className={clsx(
+              "rho-receipt-item rounded-[8px] border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-left",
+              label === "Not performed" && "rho-receipt-item--not-performed",
+              selectedReceipt === label && "rho-receipt-item--expanded",
+            )}
+          >
+            <dt className="mono text-[10.5px] uppercase tracking-[0.08em] text-[var(--ink)]">
+              {label}
+            </dt>
+            <dd className="mt-0.5 text-[12.5px] leading-snug text-[var(--ink-2)]">
+              {value}
+            </dd>
+            {selectedReceipt === label && (
+              <dd className="rho-reveal-panel mt-2">
+                <span className="mono text-[10.5px] uppercase tracking-[0.08em] text-[var(--ink)]">
+                  Safety reason
+                </span>
+                <span className="mt-1 block text-[12.5px] leading-relaxed text-[var(--ink-2)]">
+                  {receiptReason(label, props.status)}
+                </span>
+              </dd>
+            )}
+          </button>
+        ))}
+      </dl>
+    </div>
+  );
+};
+
+const PolicyRadar = ({
+  props,
+}: RendererProps<{
+  queries: string[];
+  sources: {
+    id: string;
+    title: string;
+    source: string;
+    excerpt: string;
+    url?: string;
+  }[];
+  selectedSourceId?: string;
+  confidence: "low" | "medium" | "high";
+}>) => {
+  const sources = props.sources ?? [];
+  const [selectedSourceId, setSelectedSourceId] = useState<string | null>(
+    props.selectedSourceId ?? sources[0]?.id ?? null,
+  );
+  const selectedSource = sources.find((source) => source.id === selectedSourceId);
+  const [selectedLane, setSelectedLane] = useState<SourceLane>(
+    selectedSource ? sourceLane(selectedSource) : SOURCE_LANES[0],
+  );
+  const sourcesByLane = SOURCE_LANES.map((lane) => ({
+    lane,
+    sources: sources.filter((source) => sourceLane(source) === lane),
+  }));
+  return (
+    <div className="rho-proc-block rho-policy-radar rounded-[var(--radius)] border border-[var(--line)] bg-[var(--surface)] p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-[15px] font-semibold text-[var(--ink)]">
+            Policy radar
+          </h3>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {(props.queries ?? []).map((query) => (
+              <span
+                key={query}
+                className="rho-proc-chip rounded-md border border-[var(--line)] bg-[var(--surface-soft)] px-2 py-1 mono text-[10.5px] text-[var(--ink)]"
+              >
+                {query}
+              </span>
+            ))}
+          </div>
+        </div>
+        <StatusPill label={`${props.confidence} confidence`} tone={props.confidence} />
+      </div>
+      <div className="rho-policy-lanes mt-4 grid gap-2">
+        {sourcesByLane.map(({ lane, sources: laneSources }) => (
+          <section
+            key={lane}
+            className={clsx(
+              "rho-policy-lane rounded-[8px] border border-[var(--line)] bg-[var(--surface-soft)] p-2.5",
+              `rho-policy-lane--${lane.toLowerCase().replace(/\s+/g, "-")}`,
+              selectedLane === lane && "rho-policy-lane--selected",
+            )}
+          >
+            <button
+              type="button"
+              aria-expanded={selectedLane === lane}
+              onClick={() => setSelectedLane(lane)}
+              className="mb-2 flex w-full items-center justify-between gap-2 text-left"
+            >
+              <h4 className="mono text-[10.5px] uppercase tracking-[0.08em] text-[var(--ink)]">
+                {lane}
+              </h4>
+              <span className="mono text-[10.5px] text-[var(--ink)]">
+                {laneSources.length}
+              </span>
+            </button>
+            {selectedLane === lane && (
+              <div className="rho-reveal-panel mb-2">
+                <span className="mono text-[10.5px] uppercase tracking-[0.08em] text-[var(--ink)]">
+                  Lane role
+                </span>
+                <p className="mt-1 text-[12.5px] leading-relaxed text-[var(--ink-2)]">
+                  {laneRole(lane)}
+                </p>
+              </div>
+            )}
+            <div className="grid gap-2">
+              {laneSources.length ? (
+                laneSources.map((source) => {
+                  const selected = source.id === selectedSourceId;
+                  return (
+                    <article key={source.id} className="grid gap-2">
+                      <button
+                        type="button"
+                        aria-expanded={selected}
+                        onClick={() => {
+                          setSelectedSourceId((current) =>
+                            current === source.id ? null : source.id,
+                          );
+                          setSelectedLane(lane);
+                        }}
+                      className={clsx(
+                        "rho-proc-item rho-policy-source rounded-[8px] border p-3 text-left",
+                        selected
+                          ? "rho-policy-source--selected border-[var(--ink)] bg-[var(--surface)]"
+                          : "border-[var(--line)] bg-[var(--surface)]",
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <h5 className="truncate text-[13px] font-semibold text-[var(--ink)]">
+                            {source.title}
+                          </h5>
+                          <p className="mt-0.5 mono text-[10.5px] text-[var(--ink)]">
+                            {source.source}
+                          </p>
+                        </div>
+                        {selected && <StatusPill label="selected" tone="active" />}
+                      </div>
+                      <p className="mt-2 text-[12.5px] leading-relaxed text-[var(--ink-2)]">
+                        {source.excerpt}
+                      </p>
+                      </button>
+                      {selected && (
+                        <div className="rho-reveal-panel">
+                          <span className="mono text-[10.5px] uppercase tracking-[0.08em] text-[var(--ink)]">
+                            Why this source matters
+                          </span>
+                          <p className="mt-1 text-[12.5px] leading-relaxed text-[var(--ink-2)]">
+                            {source.source} is categorized as {lane}. Use the
+                            excerpt as returned evidence only; it does not
+                            expose hidden reasoning or credentials. Confidence:
+                            {" "}
+                            {props.confidence}.
+                          </p>
+                          {source.url && (
+                            <a
+                              href={source.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-2 inline-flex rounded-md border border-[var(--line)] bg-[var(--surface)] px-2 py-1 mono text-[10.5px] uppercase tracking-[0.08em] text-[var(--ink)]"
+                            >
+                              Open source
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </article>
+                  );
+                })
+              ) : (
+                <div className="rho-policy-source rho-policy-source--empty rounded-[8px] border border-[var(--line)] bg-[var(--surface)] p-3 text-[12.5px] text-[var(--ink)]">
+                  No source in this lane.
+                </div>
+              )}
+            </div>
+          </section>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 function Slot({ render }: { render: ReactNode }) {
   return <>{render}</>;
 }
@@ -1071,4 +1776,7 @@ export const renderers = {
   DataTable,
   Button,
   ChoiceChips,
+  AgentRelayMap,
+  ToolActionCard,
+  PolicyRadar,
 };

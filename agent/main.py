@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 # Patch ag-ui-langgraph's multimodal converter so PDF text shipped via
 # CopilotChat attachments survives the trip to the model (Gemini via the
@@ -33,6 +33,11 @@ from src.multimodal_middleware import install as _install_doc_inlining  # noqa: 
 
 _install_doc_inlining()
 
+from src.banking_agent import (  # noqa: E402
+    get_full_a2a_status,
+    graph as banking_graph,
+    integration_health_snapshot,
+)
 from src.dynamic_agent import graph as dynamic_graph  # noqa: E402
 from src.fixed_agent import graph as fixed_graph  # noqa: E402
 
@@ -51,6 +56,17 @@ app.add_middleware(
 # 50 is plenty for our two-tool flow; bump higher only if a deeper agent
 # loop is genuinely needed.
 _AGENT_CONFIG = {"recursion_limit": 50}
+
+add_langgraph_fastapi_endpoint(
+    app=app,
+    agent=LangGraphAGUIAgent(
+        name="banking_agent",
+        description="Rho Signal Room banking case-room agent.",
+        graph=banking_graph,
+        config=_AGENT_CONFIG,
+    ),
+    path="/banking",
+)
 
 add_langgraph_fastapi_endpoint(
     app=app,
@@ -137,6 +153,7 @@ except Exception as exc:  # noqa: BLE001 — never let /legal break /fixed + /dy
 @app.get("/")
 def root():
     agents = {
+        "banking_agent": "/banking/",
         "fixed_agent": "/fixed/",
         "dynamic_agent": "/dynamic/",
     }
@@ -146,6 +163,16 @@ def root():
         "ok": True,
         "agents": agents,
     }
+
+
+@app.get("/rho/full-a2a/{context_id}")
+def full_a2a_status(context_id: str):
+    return get_full_a2a_status(context_id)
+
+
+@app.get("/rho/health")
+def rho_health(live_a2a: bool = True):
+    return {"checks": integration_health_snapshot(live_a2a_enabled=live_a2a)}
 
 
 def main():

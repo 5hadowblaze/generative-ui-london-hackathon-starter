@@ -9,18 +9,18 @@
    src/app/(pdf)/pdf-analyst.css. `pnpm theme:reset` reverts both.
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .a2ui-surface {
-  --background: #fafafc;
-  --foreground: #010507;
+  --background: #f6f7f8;
+  --foreground: #151719;
   --card: #ffffff;
-  --primary: #010507;
+  --primary: #151719;
   --primary-foreground: #ffffff;
-  --border: #dbdbe5;
-  --input: #dbdbe5;
-  --muted: #f0f0f4;
-  --muted-foreground: #57575b;
-  --accent: #bec2ff;
-  --accent-foreground: #010507;
-  --radius: 14px;
+  --border: #d8dde1;
+  --input: #d8dde1;
+  --muted: #f2f4f5;
+  --muted-foreground: #565d63;
+  --accent: #2f8f70;
+  --accent-foreground: #151719;
+  --radius: 8px;
 
   font-family:
     var(--font-plus-jakarta),
@@ -36,4 +36,134 @@
 .a2ui-surface img {
   max-height: 32px;
   border-radius: 6px;
+}
+
+.a2ui-surface button,
+.a2ui-surface a,
+.a2ui-surface summary,
+.a2ui-surface [role="button"],
+.a2ui-surface [tabindex]:not([tabindex="-1"]) {
+  outline: 2px solid transparent;
+  outline-offset: 3px;
+}
+
+.a2ui-surface button {
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.a2ui-surface button:hover:not(:disabled) {
+  box-shadow: 0 6px 16px rgba(21, 23, 25, 0.1);
+  transform: translateY(-1px);
+}
+
+.a2ui-surface button:active:not(:disabled) {
+  box-shadow: 0 2px 8px rgba(21, 23, 25, 0.12);
+  transform: translateY(0);
+}
+
+.a2ui-surface button:disabled,
+.a2ui-surface [aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.56;
+}
+
+.a2ui-surface button:focus-visible,
+.a2ui-surface a:focus-visible,
+.a2ui-surface summary:focus-visible,
+.a2ui-surface [role="button"]:focus-visible,
+.a2ui-surface [tabindex]:not([tabindex="-1"]):focus-visible {
+  outline-color: color-mix(in oklab, var(--accent) 72%, var(--foreground));
+  box-shadow:
+    0 0 0 3px var(--card),
+    0 0 0 6px color-mix(in oklab, var(--accent) 28%, transparent);
+}
+
+.a2ui-surface [aria-pressed="true"],
+.a2ui-surface [aria-selected="true"],
+.a2ui-surface [data-selected="true"],
+.a2ui-surface [data-state="active"] {
+  border-color: color-mix(in oklab, var(--accent) 62%, var(--border));
+  background-color: color-mix(in oklab, var(--accent) 12%, var(--card));
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.a2ui-surface details {
+  border-radius: var(--radius);
+}
+
+.a2ui-surface summary {
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.a2ui-surface summary:hover {
+  background: color-mix(in oklab, var(--accent) 7%, transparent);
+}
+
+.a2ui-surface summary::after {
+  content: "";
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-left: auto;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  opacity: 0.72;
+  transform: rotate(45deg);
+  transition: transform 150ms ease;
+}
+
+.a2ui-surface details[open] > summary::after {
+  transform: translateY(0.15rem) rotate(225deg);
+}
+
+.a2ui-surface tbody tr {
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.a2ui-surface tbody tr:hover,
+.a2ui-surface tbody tr:focus-within,
+.a2ui-surface tbody tr[aria-selected="true"],
+.a2ui-surface tbody tr[data-selected="true"] {
+  background: color-mix(in oklab, var(--accent) 8%, var(--card));
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.a2ui-surface [class*="overflow-hidden"][class*="pl-4"] {
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.a2ui-surface [class*="overflow-hidden"][class*="pl-4"]:hover {
+  border-color: color-mix(in oklab, var(--accent) 46%, var(--border));
+  box-shadow: 0 8px 22px rgba(21, 23, 25, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .a2ui-surface *,
+  .a2ui-surface *::before,
+  .a2ui-surface *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .a2ui-surface button:hover:not(:disabled),
+  .a2ui-surface button:active:not(:disabled) {
+    transform: none;
+  }
 }

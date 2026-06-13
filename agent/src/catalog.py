@@ -67,6 +67,14 @@ component must have `id: "root"`.
 - **Button** { label, variant?: primary|secondary|ghost, action: { event: { name, context? } } }
 - **ChoiceChips** { label, options: [{label,value}], value: {path}, multi?: bool }
 
+### Banking case components
+- **AgentRelayMap** { nodes: [{id,label,role,status}], edges: [{from,to,label,status}], activeNodeId?: string, contextId: string }
+    Operational map of A2A handoffs. Node status is idle|active|complete|blocked. Edge status is pending|active|complete|blocked.
+- **ToolActionCard** { actor: personal|customer_service|system, toolName: string, arguments: [{key,value}], status: proposed|running|complete|blocked|failed, resultSummary: string, riskLevel: low|medium|high }
+    Preview or receipt for one banking tool call. Use for user-side or bank-side actions.
+- **PolicyRadar** { queries: [string], sources: [{id,title,source,excerpt,url?}], selectedSourceId?: string, confidence: low|medium|high }
+    Evidence panel for bank policy and LinkUp public sources.
+
 
 ### Rules
 1. Exactly one component has id="root". Everything else must be reachable from root.

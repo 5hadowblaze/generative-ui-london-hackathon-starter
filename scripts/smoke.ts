@@ -15,9 +15,8 @@
  *   2. `pnpm validate-widget --examples`— other-examples/EXAMPLE.json files
  *   3. `pnpm validate-widget` over every JSON in the widget/schema dirs
  *   4. `pnpm test:widgets`              — fixture renderer pass (delegates to validator)
- *   4a. `pnpm test:schemas`             — pytest path-vs-data alignment, SKIPPED when
- *                                         agent/tests/ is absent (pdf-analyst ships no
- *                                         pytest suite at the agent root yet)
+ *   4a. `pnpm test:schemas`             — Python unittest coverage, SKIPPED when
+ *                                         agent/tests/ is absent
  *   5. offline envelope shape check     — validates public/offline-envelopes.json
  *                                         structure if present; SKIPPED when absent
  *                                         (it was archived with PortKit)
@@ -187,16 +186,14 @@ const STEPS: Step[] = [
     },
   },
   {
-    name: "test:schemas (pytest path-vs-data alignment)",
+    name: "test:schemas (Python banking-agent tests)",
     run: async () => {
-      // `pnpm test:schemas` is `cd agent && uv run python -m pytest tests/`.
-      // The pdf-analyst default agent ships no pytest suite at agent/tests/
-      // yet (the PortKit schema tests were archived). Skip when the dir is
-      // absent so smoke is exit-0 statically; run it the moment a suite lands.
+      // `pnpm test:schemas` is `cd agent && uv run python -m unittest discover -s tests -v`.
+      // Skip when the dir is absent so smoke is exit-0 statically.
       const testsDir = join(REPO_ROOT, "agent", "tests");
       if (!existsSync(testsDir)) {
         console.log(
-          `${YELLOW}!${RESET} ${DIM}agent/tests/ not present — no pytest schema suite to run. Skipping.${RESET}\n`,
+          `${YELLOW}!${RESET} ${DIM}agent/tests/ not present — no Python test suite to run. Skipping.${RESET}\n`,
         );
         return { pass: true, detail: "skipped (no agent/tests/)" };
       }

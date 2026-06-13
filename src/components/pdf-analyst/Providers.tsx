@@ -10,6 +10,7 @@ import { createMirrorActivityRenderer } from "@/a2ui/MirrorRenderer";
  * The pill the renderer leaves behind in chat is the user-visible breadcrumb
  * ("surface → rendered in the canvas"). */
 const RENDERERS = [
+  createMirrorActivityRenderer("banking_agent"),
   createMirrorActivityRenderer("fixed_agent"),
   createMirrorActivityRenderer("dynamic_agent"),
 ];

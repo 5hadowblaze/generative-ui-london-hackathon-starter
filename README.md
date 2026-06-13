@@ -2,7 +2,9 @@
 
 Welcome to the **London A2A & A2UI Hackathon** — a full-day event at **Google London CSG** on **Saturday, June 13, 2026**, brought to you by Google Cloud, [A2A Net](https://a2anet.com/), [CopilotKit](https://copilotkit.ai), [Linkup](https://www.linkup.so/), and [Redis](https://redis.io/iris/). This starter kit is CopilotKit's head start for the **A2UI (Generative UI) track** — a Next.js + FastAPI app where the agent emits declarative **A2UI** envelopes and the frontend renders them as live React components. Wired up with CopilotKit, AG-UI, Google A2UI, Gemini, and an A2A bolt-on for the **Agent Interoperability track**.
 
-The headline demo is **pdf-analyst**: drop a PDF in chat and the agent builds the answer UI for you — a fixed-schema dashboard for the at-a-glance view and dynamic A2UI surfaces (Recharts) for any follow-up question. The boring 80% (a 21-component A2UI catalog, the in-canvas surface renderer, the agent loop, the FastAPI transport) is already built so your team can spend the build day on the parts judges remember: your domain, your widgets, your branding.
+The headline demo in this fork is **Rho Signal Room**: a banking support case room where CopilotKit + AG-UI stream A2UI surfaces showing A2A agent handoffs, policy evidence, verification boundaries, proposed tool actions, Redis-backed case state, and final receipts. The original PDF analyst remains useful as starter reference, but `/fixed` now opens the Rho banking command center.
+
+For the mixed-track implementation details, see [docs/rho-signal-room.md](docs/rho-signal-room.md).
 
 https://github.com/user-attachments/assets/c053d2e8-1d40-43cb-8c5a-8e5c121b851f
 
@@ -48,17 +50,17 @@ pnpm run doctor           # preflight: Node, pnpm, Python, uv, env vars, ports
 pnpm dev                  # boots Next.js + the FastAPI agent (uvicorn main:app, :8123) concurrently
 ```
 
-Browser opens at `http://localhost:3000` (or the next free port — Next.js bumps to 3001+ if 3000 is taken, so check the terminal output). The default demo is **pdf-analyst** — chat-with-your-PDF, where the agent builds the answer UI from a 21-component A2UI catalog. The landing page (`/`) routes to two modes; both read the **same** catalog:
+Browser opens at `http://localhost:3000` (or the next free port — Next.js bumps to 3001+ if 3000 is taken, so check the terminal output). The default route redirects to **Rho Signal Room** at `/fixed`; both Rho and the remaining starter examples read the **same** A2UI catalog:
 
-- **`/fixed` — fixed-schema dashboard.** You author the dashboard layout once (one JSON file); the agent extracts KPIs, a trend, a share split, and table rows from the PDF and fills them in. Fast, predictable, brand-locked.
+- **`/fixed` — Rho Signal Room.** Type a banking request; the agent paints a generated case room with relay, policy, tool-action, and receipt components.
 - **`/dynamic` — dynamic A2UI surfaces.** Ask any follow-up question and a secondary LLM invents the component tree for the answer — Recharts bar/line/donut charts, tables, callouts — on demand.
 - **`/catalog`** — a gallery of every primitive the agent is allowed to use.
 
 Try it:
 
-1. Open `/fixed`, attach a PDF in chat (a quarterly report, a paper, an invoice). → the agent paints a KPI dashboard with a trend chart and a data table, all streamed down as A2UI.
-2. *"Break the revenue down by region as a bar chart."* → a dynamic surface invents the chart from the document.
-3. *"Summarise the risks as a bulleted callout."* → a dynamic surface composes a callout + bullet list.
+1. Open `/fixed`, then ask: *"I want to refer my friend Dana for a Blue Account."*
+2. Try: *"I see a card charge I don't recognize. Can you help me dispute it?"*
+3. Try: *"I want a human agent now."*
 
 Every surface is generated on demand: the agent picks the components, emits an A2UI envelope, the renderer turns it into React. The surface paints into the canvas beside the chat, with a `MirrorRenderer` pill echoing it inline — that's how you know A2UI is actually working.
 
@@ -107,6 +109,7 @@ Other building blocks (use what helps, skip what doesn't):
 
 - **[WELCOME.md](WELCOME.md)** — 200-word orientation
 - **[HACKATHON.md](HACKATHON.md)** — your full build-day playbook with hour-by-hour template
+- **[docs/rho-signal-room.md](docs/rho-signal-room.md)** — mixed-track Rho Signal Room architecture, envs, and verification
 - **[other-examples/portkit/DEMO.md](other-examples/portkit/DEMO.md)** — the archived PortKit on-stage script (3 min, 5 turns + recovery)
 - **[AGENTS.md](AGENTS.md)** — agent guide for your AI coding assistant
 - **[FROZEN.md](FROZEN.md)** — version-pinning rationale and the Gemini 3.x thought-signature trap
@@ -132,4 +135,3 @@ MIT. See [LICENSE](LICENSE).
 - **Linkup** — web search API for AI agents ([linkup.so](https://www.linkup.so/)), hackathon sponsor
 - **Redis** — agent context & memory platform (Redis Iris, [redis.io/iris](https://redis.io/iris/)), hackathon partner
 - **Base starter** — [CopilotKit/examples/integrations/langgraph-python](https://github.com/CopilotKit/CopilotKit/tree/main/examples/integrations/langgraph-python)
-

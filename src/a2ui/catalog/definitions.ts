@@ -274,6 +274,63 @@ export const definitions = {
       multi: z.boolean().optional(),
     }),
   },
+
+  AgentRelayMap: {
+    description:
+      "Operational map of A2A handoffs. Shows agent/tool nodes and the message path for the current case.",
+    props: z.object({
+      nodes: z.array(
+        z.object({
+          id: z.string(),
+          label: z.string(),
+          role: z.string(),
+          status: z.enum(["idle", "active", "complete", "blocked"]),
+        }),
+      ),
+      edges: z.array(
+        z.object({
+          from: z.string(),
+          to: z.string(),
+          label: z.string(),
+          status: z.enum(["pending", "active", "complete", "blocked"]),
+        }),
+      ),
+      activeNodeId: z.string().optional(),
+      contextId: z.string(),
+    }),
+  },
+
+  ToolActionCard: {
+    description:
+      "Banking tool-call preview or receipt. Use for proposed, running, completed, blocked, or failed user/bank actions.",
+    props: z.object({
+      actor: z.enum(["personal", "customer_service", "system"]),
+      toolName: z.string(),
+      arguments: z.array(z.object({ key: z.string(), value: z.string() })),
+      status: z.enum(["proposed", "running", "complete", "blocked", "failed"]),
+      resultSummary: z.string(),
+      riskLevel: z.enum(["low", "medium", "high"]),
+    }),
+  },
+
+  PolicyRadar: {
+    description:
+      "Evidence panel for retrieved policy and public sources. Shows search queries, selected sources, and confidence.",
+    props: z.object({
+      queries: z.array(z.string()),
+      sources: z.array(
+        z.object({
+          id: z.string(),
+          title: z.string(),
+          source: z.string(),
+          excerpt: z.string(),
+          url: z.string().optional(),
+        }),
+      ),
+      selectedSourceId: z.string().optional(),
+      confidence: z.enum(["low", "medium", "high"]),
+    }),
+  },
 };
 
 export type Definitions = typeof definitions;
