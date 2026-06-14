@@ -485,6 +485,39 @@ class BankingAgentTests(unittest.TestCase):
         ids = {component["id"] for component in components}
         self.assertNotIn("redis-rehydrated", ids)
 
+    def test_relay_edges_animate_active_handoff_and_settle_on_complete(self):
+        referral = banking_agent._build_payload(
+            "referral",
+            "Refer Dana",
+            "rho-referral-demo",
+            case_stage="intake",
+            live_a2a_enabled=False,
+        )
+        edges = {(e["from"], e["to"]): e["status"] for e in referral["relay"]["edges"]}
+        # Referral keeps the personal agent active -> the inbound edge animates.
+        self.assertEqual(edges[("user", "personal")], "active")
+        self.assertEqual(edges[("personal", "cs")], "complete")
+
+        dispute = banking_agent._build_payload(
+            "dispute",
+            "I see a charge I do not recognize",
+            "rho-dispute-demo",
+            case_stage="intake",
+            live_a2a_enabled=False,
+        )
+        d_edges = {(e["from"], e["to"]): e["status"] for e in dispute["relay"]["edges"]}
+        self.assertEqual(d_edges[("personal", "cs")], "active")
+
+        completed = banking_agent._build_payload(
+            "dispute",
+            "I see a charge I do not recognize",
+            "rho-dispute-demo",
+            case_stage="completed",
+            live_a2a_enabled=False,
+        )
+        c_edges = {(e["from"], e["to"]): e["status"] for e in completed["relay"]["edges"]}
+        self.assertNotIn("active", set(c_edges.values()))
+
     def test_action_tool_message_regenerates_case_room(self):
         model = banking_agent.BankingCaseModel()
         result = model._generate(

@@ -1063,6 +1063,17 @@ def _receipt_for(
     }
 
 
+def _handoff_status(is_active_edge: bool, case_stage: CaseStage) -> str:
+    """Relay edge status driven by which agent currently owns the handoff.
+
+    The edge leading into the active agent animates ("active") while the case
+    is in progress; once the case completes every handoff settles to
+    "complete". Blocked edges are handled separately (tool boundary)."""
+    if case_stage == "completed":
+        return "complete"
+    return "active" if is_active_edge else "complete"
+
+
 def _build_payload(
     kind: CaseKind,
     request_text: str,
@@ -1087,8 +1098,8 @@ def _build_payload(
             {"id": "tools", "label": "Env tools", "role": "Action boundary", "status": "blocked" if tool["status"] == "blocked" else "idle"},
         ],
         "edges": [
-            {"from": "user", "to": "personal", "label": request_text[:74], "status": "complete"},
-            {"from": "personal", "to": "cs", "label": "Policy and procedure check", "status": "complete"},
+            {"from": "user", "to": "personal", "label": request_text[:74], "status": _handoff_status(active_agent == "Personal agent", case_stage)},
+            {"from": "personal", "to": "cs", "label": "Policy and procedure check", "status": _handoff_status(active_agent == "CS agent", case_stage)},
             {"from": "cs", "to": "kb", "label": "Retrieve policy evidence", "status": "complete"},
             {"from": "cs", "to": "tools", "label": "Tool eligibility reviewed", "status": "blocked" if tool["status"] == "blocked" else "pending"},
         ],
