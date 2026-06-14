@@ -1,137 +1,246 @@
-# London A2A & A2UI Hackathon — Starter Kit
+# Rho Signal Room
 
-Welcome to the **London A2A & A2UI Hackathon** — a full-day event at **Google London CSG** on **Saturday, June 13, 2026**, brought to you by Google Cloud, [A2A Net](https://a2anet.com/), [CopilotKit](https://copilotkit.ai), [Linkup](https://www.linkup.so/), and [Redis](https://redis.io/iris/). This starter kit is CopilotKit's head start for the **A2UI (Generative UI) track** — a Next.js + FastAPI app where the agent emits declarative **A2UI** envelopes and the frontend renders them as live React components. Wired up with CopilotKit, AG-UI, Google A2UI, Gemini, and an A2A bolt-on for the **Agent Interoperability track**.
+Rho Signal Room is a Generative UI banking support demo built for the London
+A2A & A2UI Hackathon at Google London CSG on June 13, 2026.
 
-The headline demo in this fork is **Rho Signal Room**: a banking support case room where CopilotKit + AG-UI stream A2UI surfaces showing A2A agent handoffs, policy evidence, verification boundaries, proposed tool actions, Redis-backed case state, and final receipts. The original PDF analyst remains useful as starter reference, but `/fixed` now opens the Rho banking command center.
+The project turns a normal banking support chat into a live case room. A
+customer can ask about a referral, dispute, account closure, or human transfer,
+and the agent generates an interactive A2UI surface with case status, agent
+handoffs, policy evidence, risk gates, tool-action state, Redis-backed memory,
+LinkUp public evidence, and a final customer-safe receipt.
 
-For the mixed-track implementation details, see [docs/rho-signal-room.md](docs/rho-signal-room.md).
+The main demo lives at:
 
-https://github.com/user-attachments/assets/c053d2e8-1d40-43cb-8c5a-8e5c121b851f
+```text
+http://localhost:3000/fixed
+```
 
-## About this starter
+## What This Project Shows
 
-This is CopilotKit's starter for the **A2UI (Generative UI) track** of the London A2A & A2UI Hackathon — a full-day, in-person build at Google London CSG. The default LLM is **Gemini 3.5 Flash** via the native Google Gen AI SDK (`langchain-google-genai`). The provider is deliberately pinned for the build window; if you must swap (OpenAI, Anthropic, or an OpenAI-compatible endpoint), the supported paths are documented in `.env.example` and [FROZEN.md](FROZEN.md) § LLM provider — it's a small code edit in the three agent files, not just an env change.
+Rho Signal Room is designed for the Generative UI track: the agent does not only
+answer with text. It chooses and renders structured UI at runtime.
 
-This is an example application that we built to help you get started quickly. Everything you see can be customized, replaced, augmented, or built upon. Six grep-anchored **customization seams** mark the spots designed to be edited — search the repo for `CUSTOMIZATION SEAM` and the full recipes live in [HACKATHON.md](HACKATHON.md).
+The generated case room makes regulated support work visible:
 
-> Frozen on **2026-05-28**. Run `pnpm verify-pins` to confirm. Versions are pinned for the build window — see [FROZEN.md](FROZEN.md) for the why.
+- **Case intake** - the customer request is classified as referral, dispute,
+  account closure, or human transfer.
+- **Live A2A handoff** - the banking UI can call a server-side A2A personal
+  agent and attach the returned response to the case.
+- **Agent relay map** - shows the handoff path between user, personal agent,
+  customer-service agent, policy retrieval, live A2A, and environment tools.
+- **Policy radar** - separates evidence into bank policy, public evidence,
+  Redis memory, and agent response lanes.
+- **Tool-action boundary** - shows what the agent wants to do, whether it is
+  allowed, and why a high-risk action is blocked.
+- **Final receipt** - summarizes required tech used, tool status, next safe
+  action, and what was not performed.
 
-## Generative UI
+For example, a debit-card dispute does not immediately expose private
+transaction details. The UI first shows that identity verification is required,
+that the case is high risk, and that the dispute tool is blocked until the
+customer verifies enough factors.
 
-> Generative UI describes any AI-driven interface where the agent **chooses, composes, or writes UI at runtime**. The field spans a spectrum from controlled component menus (safe, predictable, but limited) to fully open-ended LLM-generated DOM (flexible, but unreliable). This starter sits in the middle — a declarative, schema-driven envelope (**A2UI v0.9**) that the agent emits and a typed renderer turns into real React.
+## Hackathon Context
 
-The agent sends three operations: `createSurface`, `updateComponents`, `updateDataModel`. A renderer from `@copilotkit/a2ui-renderer` materializes them into live UI. The rendered surface fills the **canvas** beside the chat, and a `MirrorRenderer` pill echoes it inline in the conversation — so judges can see real A2UI is actually firing.
+This repo began as the CopilotKit London A2A & A2UI Hackathon starter kit and
+was converted into the Rho Signal Room submission.
 
-## Stack
+The hackathon had two relevant tracks:
 
-- **[A2A](https://a2a-protocol.org/)** — Agent2Agent protocol for cross-team interop, and the basis of the hackathon's **Track 1 (Interoperability Challenge)**. Linux Foundation project, contributed by Google. v1.0.1 GA. Wired here as a bolt-on for connecting to another team's agent (set `A2A_AGENT_URL` to activate — see [A2A Net](https://a2anet.com/)). [Repo →](https://github.com/a2aproject/A2A)
-- **[A2UI](https://a2ui.org/)** — Google's open declarative UI envelope protocol. Lets agents "speak UI" by sending JSON that renders natively across frameworks. This starter is built around A2UI v0.9. [Spec →](https://a2ui.org/specification/v0.9-a2ui/) · [Repo →](https://github.com/google/A2UI)
-- **[AG-UI](https://docs.ag-ui.com/)** — Open, lightweight, event-based protocol that standardizes how agents connect to user-facing apps. Originated from CopilotKit; now maintained by the [AG-UI Protocol working group](https://github.com/ag-ui-protocol/ag-ui). AG-UI carries A2UI envelopes between the LangGraph agent and the Next.js runtime here.
-- **[CopilotKit](https://docs.copilotkit.ai/)** — The runtime that wires AG-UI through your Next.js app and ships the A2UI renderer. The chat UI, the in-canvas surface renderer, and provider plumbing all come from here. AI-assistant skills + MCP server at [`docs.copilotkit.ai/built-in-agent/build-with-agents`](https://docs.copilotkit.ai/built-in-agent/build-with-agents).
-- **[LangGraph (Python)](https://langchain-ai.github.io/langgraph/)** — The agent loop that emits A2UI envelopes via tool-calls. Two graphs ship by default — a **fixed-schema** dashboard agent and a **dynamic-schema** Q&A agent — served over a FastAPI app (`agent/main.py`, `uvicorn main:app` on `:8123`) that exposes `/fixed`, `/dynamic`, and `/legal` (the `/legal` example's UI is currently a WIP stub; the endpoint itself works). Boots via `uv`.
-- **[Gemini 3.5 Flash](https://aistudio.google.com/)** — Default LLM via the native Google Gen AI SDK (`langchain-google-genai`). Free tier, no credit card. The native SDK is required to handle thought-signature replay across tool turns — see [FROZEN.md](FROZEN.md) for the Gemini 3.x trap history.
-- **[Linkup](https://www.linkup.so/)** — Production-grade **web search API for AI agents**, and a hackathon sponsor. One API call returns sourced, cited answers grounded in live web data — useful when your agent needs facts beyond the uploaded document. Not wired into the default demo, but quick to add to your own agent: grab a free key, then use whichever fits — the LangChain tool (`pip install langchain-linkup` → `LinkupSearchTool`), the hosted **MCP server** (`https://mcp.linkup.so/mcp?apiKey=...`), or the **agent skills** (`npx skills add LinkupPlatform/skills`). Start here: [Linkup for agents →](https://docs.linkup.so/pages/documentation/get-started/for-agents) · [Docs →](https://docs.linkup.so/)
-- **[Redis](https://redis.io/iris/)** — Agent **context & memory** layer, and a hackathon partner. Many stacks already run Redis for caching; here, treat it as your **runtime context layer** — the shared memory that connects your agents, so a customer's history, a mid-session decision, or a resolved ticket can live in Redis and be available to every agent that needs it. This matters most for **Track 1 (multi-agent interop)**: a multi-agent system is only as good as its ability to share what it knows, and the strongest submissions show agents that actually learn, remember, and collaborate — not three bots running in parallel. Lean on **Redis Agent Memory** (short- and long-term context across tasks and agents) and **Redis Context Retriever** (makes external data navigable by agents) from the [Redis Iris](https://redis.io/iris/) context platform. Not wired into the default demo. [All agent capabilities → redis.io/iris](https://redis.io/iris/)
+- **Track 1: A2A Interoperability Challenge** - agent-to-agent coordination
+  using the A2A protocol.
+- **Track 2: A2UI / Generative UI Challenge** - dynamic applications where an
+  autonomous agent generates UI instead of only returning text.
 
-## Run it locally
+This repository is the Generative UI project. It keeps A2A integration in the
+UI through a server-side live handoff, but the separate Track 1 scoring repo is
+maintained independently at:
 
-Prereqs: Node 20+, pnpm 10+, Python 3.12+, [uv](https://docs.astral.sh/uv/).
+```text
+/Users/amirdzakwan/Documents/Google Hackathon/a2a-track1-submission
+```
+
+Rho Signal Room uses the hackathon stack directly:
+
+- **A2UI** for declarative UI envelopes.
+- **AG-UI** for streaming agent events into the app.
+- **CopilotKit** for the chat/runtime integration.
+- **LangGraph + FastAPI** for the Python agent backend.
+- **Gemini 3.5 Flash** for agent composition.
+- **A2A** for the banking agent handoff path.
+- **Redis** for case state and memory.
+- **LinkUp** for public evidence search.
+
+## Architecture
+
+```text
+Customer chat in Next.js
+  -> CopilotKit runtime
+  -> FastAPI LangGraph banking agent on :8123
+  -> Gemini composes a banking case response
+  -> A2UI createSurface/updateComponents/updateDataModel events
+  -> React renderer paints the case room in the canvas
+  -> optional server-side live A2A call to BANKING_A2A_AGENT_URL
+  -> optional Redis case memory at case:{contextId}:*
+  -> optional LinkUp public evidence
+```
+
+The scored Track 1 harness path is not routed through this UI. The UI calls A2A
+as an enrichment source for the generated case room; the Track 1 agents are
+run directly from their own repo for marked A2A scoring.
+
+## Main Routes
+
+- `/fixed` - Rho Signal Room, the primary banking case-room demo.
+- `/dynamic` - dynamic A2UI surfaces generated at runtime for exploratory
+  answers.
+- `/catalog` - the component catalog used by the generated surfaces.
+- `/` - case-room landing route.
+
+The current submission focus is `/fixed`.
+
+## Demo Prompts
+
+Use these in `/fixed`:
+
+```text
+I want to refer my friend Dana for a Blue Account.
+I see a debit card charge I do not recognize.
+I want a human agent now.
+```
+
+Expected behavior:
+
+- Referral cases show a safe next action: collect real friend contact details.
+- Dispute cases show a verification-first path and block transaction mutation.
+- Human-transfer cases show a capability-first support path before escalation.
+
+## Local Setup
+
+Prerequisites:
+
+- Node.js 20+
+- pnpm 10+
+- Python 3.12+
+- uv
+
+Install and run:
 
 ```bash
 git clone <your-fork-url>
 cd generative-ui-london-hackathon-starter
-pnpm install              # also installs the Python agent via uv sync
+pnpm install
 
 cp .env.example .env
-# Edit .env — set GEMINI_API_KEY
-# Free Gemini key (no credit card): https://aistudio.google.com/apikey
+# Set GEMINI_API_KEY and any optional integration keys.
 
-pnpm run doctor           # preflight: Node, pnpm, Python, uv, env vars, ports
-pnpm dev                  # boots Next.js + the FastAPI agent (uvicorn main:app, :8123) concurrently
+pnpm run doctor
+pnpm dev
 ```
 
-Browser opens at `http://localhost:3000` (or the next free port — Next.js bumps to 3001+ if 3000 is taken, so check the terminal output). The default route redirects to **Rho Signal Room** at `/fixed`; both Rho and the remaining starter examples read the **same** A2UI catalog:
+Open:
 
-- **`/fixed` — Rho Signal Room.** Type a banking request; the agent paints a generated case room with relay, policy, tool-action, and receipt components.
-- **`/dynamic` — dynamic A2UI surfaces.** Ask any follow-up question and a secondary LLM invents the component tree for the answer — Recharts bar/line/donut charts, tables, callouts — on demand.
-- **`/catalog`** — a gallery of every primitive the agent is allowed to use.
+```text
+http://localhost:3000/fixed
+```
 
-Try it:
+The normal dev command starts both:
 
-1. Open `/fixed`, then ask: *"I want to refer my friend Dana for a Blue Account."*
-2. Try: *"I see a card charge I don't recognize. Can you help me dispute it?"*
-3. Try: *"I want a human agent now."*
+- Next.js on `:3000`
+- FastAPI agent backend on `:8123`
 
-Every surface is generated on demand: the agent picks the components, emits an A2UI envelope, the renderer turns it into React. The surface paints into the canvas beside the chat, with a `MirrorRenderer` pill echoing it inline — that's how you know A2UI is actually working.
+If `pnpm` is not available in a local shell, the same services can be started
+manually with the project binaries:
 
-> **No `GEMINI_API_KEY` handy?** A key is required for the *live* chat demo — the agent calls Gemini to generate every A2UI surface on `/fixed` and `/dynamic`, so without it the chat won't respond. Two no-key options: (1) browse the full catalog at **`/catalog`**, which renders real A2UI surfaces statically in the browser, no agent call; (2) set **`OFFLINE=1`** in `.env` — the `/fixed` endpoint then serves a built-in sample dashboard (a canned Tesla Q3 FY24 surface) with no Gemini call and no key, so you can see a real painted surface end-to-end. Only `/fixed` works offline; `/dynamic` and `/legal` still require a key. Get a free-tier key (no credit card): https://aistudio.google.com/apikey.
+```bash
+./node_modules/.bin/concurrently \
+  "./node_modules/.bin/next dev --turbopack" \
+  "./scripts/run-agent.sh" \
+  --names ui,agent \
+  --prefix-colors blue,green \
+  --kill-others
+```
 
-> **Demoing live?** Have a tested PDF ready and run the walkthrough above. (The previous on-stage script belonged to the archived PortKit demo — see [`other-examples/portkit/DEMO.md`](other-examples/portkit/DEMO.md).)
+## Environment Variables
 
-## Customization seams (the 6 things you'll touch)
+Required for live agent generation:
 
-Search the repo for `CUSTOMIZATION SEAM` to jump to each one. Full recipes live in [HACKATHON.md](HACKATHON.md).
+```bash
+GEMINI_API_KEY=...
+```
 
-- **§1 — Re-theme** → `src/a2ui/theme.css` (A2UI surface tokens) + `src/app/(pdf)/pdf-analyst.css` (shell brand) + `src/hooks/use-theme.tsx` (CSS variables, no rebuild)
-- **§2 — Re-brand the shell** → `src/components/pdf-analyst/Brand.tsx` (header, nav, page hero)
-- **§3 — Swap demo data** → the PDF is the data; tune extraction in `agent/src/pdf_tools.py` (or feed a different document)
-- **§4 — Add an A2UI component** → add a definition + renderer in `src/a2ui/catalog/{definitions.ts,renderers.tsx}` and mirror its prompt summary in `agent/src/catalog.py`
-- **§5 — Swap the agent flow** → edit `agent/src/fixed_agent.py` (dashboard) or `agent/src/dynamic_agent.py` (Q&A); both served from `agent/main.py`
-- **§6 — BYO A2A agent (Track 1 interop)** → run `pnpm check-a2a <url>` first, then set `A2A_AGENT_URL`
+Optional live integration variables:
 
-Need the original project-dashboard demo (flights / sprints / todos via a LangGraph-cli agent), a second visual identity (legal paper), or net-new component primitives? See **[other-examples/](other-examples/)** — the archived **PortKit** demo lives at `other-examples/portkit/` and the legal-paper catalog at `other-examples/legal-contract-review/`.
+```bash
+BANKING_A2A_AGENT_URL=http://localhost:9001
+LINKUP_API_KEY=...
+REDIS_URL=redis://localhost:6379/0
+```
 
-## Vibe coding
+With Live A2A enabled, the app should show missing integrations as blocked
+rather than pretending that live evidence was used. Turning Live A2A off makes
+fixture mode explicit for demo comparison.
 
-This starter is built to be vibe-code-friendly. Your AI assistant (Claude Code, Gemini CLI, Cursor, Windsurf, Codex) reads **[AGENTS.md](AGENTS.md)** automatically — it's the cross-tool [agents.md](https://agents.md/) standard backed by OpenAI, Google, Sourcegraph, Cursor, and Factory. `CLAUDE.md` and `GEMINI.md` are symlinks to the same file.
+Do not commit `.env`, API keys, or banking secrets.
 
-The starter also ships:
+## Verification
 
-- **[`.mcp.json`](.mcp.json)** pointing at the canonical CopilotKit MCP server (`https://mcp.copilotkit.ai/sse`) — gives any MCP-capable assistant grounded answers about CopilotKit + A2UI APIs instead of hallucinating.
-- A **`create-a2ui-widget` skill** at `.claude/skills/` that drives an AI assistant through adding an A2UI component to the catalog.
-- **Validators that teach** — `pnpm validate-widget` and `pnpm test:widgets` point you at a real JSON template on failure.
+Recommended checks before a submission or demo:
 
-> **Adding a component.** The pdf-analyst catalog is a single design system — a component definition + React renderer in `src/a2ui/catalog/{definitions.ts,renderers.tsx}`, mirrored as a prompt summary in `agent/src/catalog.py` so the agent knows it exists. (The original fixed-schema "widget dance" — catalog JSON + fixture + Python tool + prompt hint — lives with the archived PortKit demo under [`other-examples/portkit/`](other-examples/portkit/).)
+```bash
+pnpm run doctor
+pnpm run typecheck
+pnpm run build
+cd agent && uv run python -m unittest discover -s tests -v
+```
 
-## The two tracks
+For the local environment used during development, direct TypeScript validation
+also works:
 
-The hackathon runs two tracks. This starter is built for **Track 2**, and supports **Track 1** via the A2A bolt-on:
+```bash
+./node_modules/.bin/tsc --noEmit
+```
 
-- **Track 1 — A2A Interoperability Challenge.** Build a system of 3+ agents that coordinate to solve a problem, and integrate with an agent built by *another team*. Runs on the [A2A Net platform](https://a2anet.com/); connect this starter's agent to partner agents via `A2A_AGENT_URL` (Seam §6).
-- **Track 2 — A2UI (Generative UI) Challenge.** Build a dynamic app that features both an autonomous agent and a Generative UI. This starter is your head start — a pre-built agent + 21-component A2UI catalog — so you can focus on the UI.
+## Key Files
 
-Other building blocks (use what helps, skip what doesn't):
+```text
+src/app/(pdf)/fixed/page.tsx
+src/app/(pdf)/fixed/FixedPageClient.tsx
+src/components/pdf-analyst/SurfaceCanvas.tsx
+src/a2ui/catalog/definitions.ts
+src/a2ui/catalog/renderers.tsx
+src/app/(pdf)/pdf-analyst.css
+agent/main.py
+agent/src/banking_agent.py
+agent/src/catalog.py
+docs/rho-signal-room.md
+```
 
-- **A2UI Composer** (visual envelope authoring) — [a2ui-composer.ag-ui.com](https://a2ui-composer.ag-ui.com/)
-- **Other CopilotKit examples** — [CopilotKit/examples/integrations](https://github.com/CopilotKit/CopilotKit/tree/main/examples/integrations) (chat-first, LangGraph-only, CrewAI, Mastra, etc.)
+## Why It Matters
 
-## Documentation
+Banking support workflows are high-stakes. A plain chatbot response can hide
+important control points: identity verification, policy evidence, tool
+eligibility, and whether an account action was actually performed.
 
-- **[WELCOME.md](WELCOME.md)** — 200-word orientation
-- **[HACKATHON.md](HACKATHON.md)** — your full build-day playbook with hour-by-hour template
-- **[docs/rho-signal-room.md](docs/rho-signal-room.md)** — mixed-track Rho Signal Room architecture, envs, and verification
-- **[other-examples/portkit/DEMO.md](other-examples/portkit/DEMO.md)** — the archived PortKit on-stage script (3 min, 5 turns + recovery)
-- **[AGENTS.md](AGENTS.md)** — agent guide for your AI coding assistant
-- **[FROZEN.md](FROZEN.md)** — version-pinning rationale and the Gemini 3.x thought-signature trap
-- **[SUBMITTING.md](SUBMITTING.md)** — what you'll need at submission time
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — what we'll merge post-event
-
-## Troubleshooting
-
-- **UI loads but the chat doesn't respond.** The Python agent (FastAPI / `uvicorn main:app` on `:8123`) probably failed to start — most commonly a missing or invalid `GEMINI_API_KEY`. Check the `agent` pane in your terminal for a stack trace, set the key (see `.env.example` / `agent/.env.example`), and restart `pnpm dev`. Run `pnpm run doctor` to confirm the key is found and `:8123` is free.
-- **Windows clone: missing `CLAUDE.md` / `GEMINI.md`.** These are symlinks to `AGENTS.md`. Some Windows filesystems drop symlinks on checkout. Run `./scripts/sync-memory-files.sh` (Git Bash / WSL) to re-create them, or just open `AGENTS.md` directly.
-- **`lefthook: Can't find lefthook in PATH` on commit.** Benign — the commit still succeeds. `lefthook` ships as a dev dep; run `pnpm install` once after clone.
-
-## License
-
-MIT. See [LICENSE](LICENSE).
+Rho Signal Room makes those control points visible. The result is a generated
+UI that is useful to a customer, inspectable by a reviewer, and safer for
+regulated support workflows.
 
 ## Attribution
 
-- **A2UI protocol** — [Google](https://github.com/google/A2UI)
-- **AG-UI protocol** — [AG-UI Protocol working group](https://github.com/ag-ui-protocol/ag-ui) (originated at CopilotKit)
-- **A2A protocol** — [Linux Foundation + Google](https://github.com/a2aproject/A2A)
-- **agents.md spec** — Linux Foundation cross-tool standard (backed by OpenAI, Google, Sourcegraph, Cursor, Factory)
-- **Linkup** — web search API for AI agents ([linkup.so](https://www.linkup.so/)), hackathon sponsor
-- **Redis** — agent context & memory platform (Redis Iris, [redis.io/iris](https://redis.io/iris/)), hackathon partner
-- **Base starter** — [CopilotKit/examples/integrations/langgraph-python](https://github.com/CopilotKit/CopilotKit/tree/main/examples/integrations/langgraph-python)
+Built from the CopilotKit London A2A & A2UI Hackathon starter.
+
+- A2UI protocol - Google
+- AG-UI protocol - AG-UI Protocol working group / CopilotKit
+- A2A protocol - Linux Foundation + Google
+- CopilotKit - Generative UI runtime and renderer integration
+- LinkUp - public evidence search for AI agents
+- Redis - agent context and memory
+- Gemini - model used for the agent composition path
+
+See also:
+
+- [docs/rho-signal-room.md](docs/rho-signal-room.md)
+- [HACKATHON.md](HACKATHON.md)
+- [FROZEN.md](FROZEN.md)
+- [SUBMITTING.md](SUBMITTING.md)
