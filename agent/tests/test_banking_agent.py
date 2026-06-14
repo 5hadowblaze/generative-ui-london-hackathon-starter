@@ -353,6 +353,87 @@ class BankingAgentTests(unittest.TestCase):
         self.assertEqual(message["contextId"], "ctx-1")
         self.assertEqual(captured["timeout"], 1.5)
 
+    def test_offscript_prompt_renders_unknown_safe_room(self):
+        payload = banking_agent._build_payload(
+            "unknown",
+            "I lost my card abroad and need emergency cash",
+            "rho-unknown-demo",
+            case_stage="intake",
+            live_a2a_enabled=False,
+        )
+
+        self.assertEqual(payload["summary"]["caseKind"], "unknown")
+        self.assertEqual(payload["tool"]["toolName"], "route_request")
+        self.assertEqual(payload["tool"]["riskLevel"], "low")
+        self.assertEqual(payload["nextAction"]["event"], "clarify_request")
+        self.assertIn("how i can help", payload["outcome"]["title"].lower())
+
+        components = banking_agent._components(payload)
+        self.assertTrue(banking_agent._valid_component_tree(components))
+
+    def test_reasoning_threads_provenance_and_extracted_fields(self):
+        reasoning = {
+            "case_kind": "referral",
+            "confidence": "high",
+            "policy_rationale": "Referral stays user-side; collect real details first.",
+            "next_action": "Collect Dana's contact details and ask for approval.",
+            "extracted_fields": {"friend_name": "Dana"},
+            "source": "llm",
+        }
+        payload = banking_agent._build_payload(
+            "referral",
+            "Refer my friend Dana",
+            "rho-referral-demo",
+            case_stage="intake",
+            live_a2a_enabled=False,
+            reasoning=reasoning,
+        )
+
+        self.assertEqual(payload["summary"]["reasonedBy"], "Gemini")
+        self.assertEqual(payload["summary"]["confidence"], "high")
+        self.assertEqual(payload["receipt"]["reasonedBy"], "Gemini")
+        self.assertEqual(payload["nextAction"]["caption"], reasoning["next_action"])
+        friend_arg = next(
+            arg for arg in payload["tool"]["arguments"] if arg["key"] == "friend_name"
+        )
+        self.assertEqual(friend_arg["value"], "Dana")
+        source_ids = {source["id"] for source in payload["policy"]["sources"]}
+        self.assertIn("gemini-rationale", source_ids)
+
+    def test_fallback_reasoning_marks_provenance_as_fallback(self):
+        reasoning = {
+            "case_kind": "dispute",
+            "confidence": "medium",
+            "policy_rationale": "Disputes are verification-first.",
+            "next_action": "Confirm two factors.",
+            "extracted_fields": {},
+            "source": "fallback",
+        }
+        payload = banking_agent._build_payload(
+            "dispute",
+            "I see a charge I do not recognize",
+            "rho-dispute-demo",
+            case_stage="intake",
+            live_a2a_enabled=False,
+            reasoning=reasoning,
+        )
+        self.assertEqual(payload["summary"]["reasonedBy"], "fallback")
+        source_ids = {source["id"] for source in payload["policy"]["sources"]}
+        self.assertNotIn("gemini-rationale", source_ids)
+
+    def test_generate_threads_reasoning_json_into_tool_call(self):
+        model = banking_agent.BankingCaseModel()
+        result = model._generate(
+            [HumanMessage(content="I want to refer my friend Dana for a Blue Account")]
+        )
+        call = result.generations[0].message.tool_calls[0]
+        self.assertEqual(call["name"], banking_agent.TOOL_NAME)
+        self.assertIn("reasoning_json", call["args"])
+        self.assertEqual(call["args"]["case_kind"], "referral")
+        reasoning = json.loads(call["args"]["reasoning_json"])
+        self.assertEqual(reasoning["source"], "fallback")
+        self.assertEqual(reasoning["case_kind"], "referral")
+
     def test_action_tool_message_regenerates_case_room(self):
         model = banking_agent.BankingCaseModel()
         result = model._generate(
