@@ -22,10 +22,12 @@ export function SurfaceCanvas({
   channel,
   emptyState,
   liveA2A = false,
+  onReasonedBy,
 }: {
   channel: string;
   emptyState: React.ReactNode;
   liveA2A?: boolean;
+  onReasonedBy?: (value: "Gemini" | "fallback") => void;
 }) {
   const { agent } = useAgent({ agentId: channel });
   const isWaitingForA2A = liveA2A && Boolean(agent?.isRunning);
@@ -73,6 +75,7 @@ export function SurfaceCanvas({
         emptyState={emptyState}
         isWaitingForA2A={isWaitingForA2A}
         liveA2A={liveA2A}
+        onReasonedBy={onReasonedBy}
       />
     </A2UIProvider>
   );
@@ -83,11 +86,13 @@ function CanvasInner({
   emptyState,
   isWaitingForA2A,
   liveA2A,
+  onReasonedBy,
 }: {
   channel: string;
   emptyState: React.ReactNode;
   isWaitingForA2A: boolean;
   liveA2A: boolean;
+  onReasonedBy?: (value: "Gemini" | "fallback") => void;
 }) {
   const actions = useA2UIActions();
   const [surfaceId, setSurfaceId] = useState<string | null>(null);
@@ -135,6 +140,8 @@ function CanvasInner({
         setCaseContextId(nextContextId);
         setFullA2AStatus(null);
       }
+      const reasonedBy = readReasonedBy(out);
+      if (reasonedBy && onReasonedBy) onReasonedBy(reasonedBy);
       setRevealGeneration((current) => current + 1);
     } catch (err) {
       console.warn("[surface-canvas] processMessages threw:", err);
@@ -520,6 +527,19 @@ function readCaseContextId(ops: Array<Record<string, unknown>>): string | null {
       | undefined;
     const contextId = update?.data?.case?.contextId;
     if (typeof contextId === "string" && contextId) return contextId;
+  }
+  return null;
+}
+
+function readReasonedBy(
+  ops: Array<Record<string, unknown>>,
+): "Gemini" | "fallback" | null {
+  for (const op of ops) {
+    const update = op.updateDataModel as
+      | { data?: { case?: { summary?: { reasonedBy?: unknown } } } }
+      | undefined;
+    const reasonedBy = update?.data?.case?.summary?.reasonedBy;
+    if (reasonedBy === "Gemini" || reasonedBy === "fallback") return reasonedBy;
   }
   return null;
 }
