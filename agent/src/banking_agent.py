@@ -1700,7 +1700,14 @@ def render_case_room(
 
 
 class BankingCaseModel(BaseChatModel):
-    """Deterministic model that turns each user turn into one case-room render."""
+    """Turns each user turn into one case-room render.
+
+    Hybrid: it asks ``case_reasoner.reason_about_case`` (live Gemini when a key
+    is present, else a deterministic keyword fallback) to classify the case and
+    produce the policy rationale / next action / extracted fields, then emits a
+    single ``render_case_room`` tool call carrying that reasoning. The
+    deterministic layout in ``generate_case_surface`` / ``_components`` owns the
+    rendered structure and safety gates."""
 
     @property
     def _llm_type(self) -> str:
