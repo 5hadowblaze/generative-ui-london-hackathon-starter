@@ -315,7 +315,7 @@ export const definitions = {
 
   PolicyRadar: {
     description:
-      "Evidence panel for retrieved policy and public sources. Shows search queries, selected sources, and confidence.",
+      "Evidence panel for retrieved policy and public sources. Shows search queries, selected sources, freshness of live LinkUp evidence, and confidence.",
     props: z.object({
       queries: z.array(z.string()),
       sources: z.array(
@@ -325,10 +325,12 @@ export const definitions = {
           source: z.string(),
           excerpt: z.string(),
           url: z.string().optional(),
+          fetchedAt: z.number().optional(),
         }),
       ),
       selectedSourceId: z.string().optional(),
       confidence: z.enum(["low", "medium", "high"]),
+      rationale: z.string().optional(),
     }),
   },
 };

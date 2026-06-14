@@ -315,6 +315,7 @@ def _linkup_sources(kind: CaseKind) -> tuple[list[dict[str, str]], IntegrationCh
             "message": f"LinkUp live public search failed with {type(exc).__name__}{detail}; the app did not substitute fake public evidence.",
         }
     out = []
+    fetched_at = int(time.time())
     for index, result in enumerate(data.get("results", [])[:2], 1):
         out.append(
             {
@@ -323,6 +324,7 @@ def _linkup_sources(kind: CaseKind) -> tuple[list[dict[str, str]], IntegrationCh
                 "source": "LinkUp",
                 "excerpt": str(result.get("content") or result.get("snippet") or "")[:220],
                 "url": str(result.get("url") or ""),
+                "fetchedAt": fetched_at,
             }
         )
     if not out:
@@ -1399,6 +1401,7 @@ def _components(payload: dict[str, Any]) -> list[dict[str, Any]]:
             "sources": payload["policy"]["sources"],
             "selectedSourceId": payload["policy"]["selectedSourceId"],
             "confidence": payload["policy"]["confidence"],
+            **({"rationale": payload["policy"]["rationale"]} if payload["policy"].get("rationale") else {}),
         },
         {
             "id": "case-table",

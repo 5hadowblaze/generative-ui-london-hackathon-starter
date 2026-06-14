@@ -1,7 +1,7 @@
 "use client";
 
 import { clsx } from "clsx";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import {
   Bar,
@@ -1183,7 +1183,18 @@ type PolicySource = {
   source: string;
   excerpt: string;
   url?: string;
+  fetchedAt?: number;
 };
+
+/* Relative-freshness label for live LinkUp evidence. `fetchedAt` is a unix
+ * timestamp (seconds). Returns "live" within the first minute, then a coarse
+ * "fetched Xs/m/h ago" string. */
+function formatFreshness(fetchedAt: number, nowMs: number): string {
+  const ageSeconds = Math.max(0, Math.round(nowMs / 1000 - fetchedAt));
+  if (ageSeconds < 60) return "live";
+  if (ageSeconds < 3600) return `fetched ${Math.floor(ageSeconds / 60)}m ago`;
+  return `fetched ${Math.floor(ageSeconds / 3600)}h ago`;
+}
 
 const STATUS_TONE = {
   idle: "border-[var(--line)] bg-[var(--surface)] text-[var(--ink-2)]",
@@ -1598,15 +1609,10 @@ const PolicyRadar = ({
   props,
 }: RendererProps<{
   queries: string[];
-  sources: {
-    id: string;
-    title: string;
-    source: string;
-    excerpt: string;
-    url?: string;
-  }[];
+  sources: PolicySource[];
   selectedSourceId?: string;
   confidence: "low" | "medium" | "high";
+  rationale?: string;
 }>) => {
   const sources = props.sources ?? [];
   const [selectedSourceId, setSelectedSourceId] = useState<string | null>(
@@ -1616,6 +1622,17 @@ const PolicyRadar = ({
   const [selectedLane, setSelectedLane] = useState<SourceLane>(
     selectedSource ? sourceLane(selectedSource) : SOURCE_LANES[0],
   );
+  // Tick a clock only while at least one source carries a fetchedAt stamp, so
+  // the "fetched Xs ago / live" freshness label stays honest as time passes.
+  const hasFreshness = sources.some(
+    (source) => typeof source.fetchedAt === "number",
+  );
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    if (!hasFreshness) return;
+    const timer = setInterval(() => setNowMs(Date.now()), 15000);
+    return () => clearInterval(timer);
+  }, [hasFreshness]);
   const sourcesByLane = SOURCE_LANES.map((lane) => ({
     lane,
     sources: sources.filter((source) => sourceLane(source) === lane),
@@ -1640,6 +1657,16 @@ const PolicyRadar = ({
         </div>
         <StatusPill label={`${props.confidence} confidence`} tone={props.confidence} />
       </div>
+      {props.rationale && (
+        <div className="rho-policy-rationale mt-3 rounded-[8px] border border-[var(--line)] bg-[var(--surface-soft)] p-3">
+          <span className="mono text-[10.5px] uppercase tracking-[0.08em] text-[var(--ink)]">
+            Reasoned rationale
+          </span>
+          <p className="mt-1 text-[12.5px] leading-relaxed text-[var(--ink-2)]">
+            {props.rationale}
+          </p>
+        </div>
+      )}
       <div className="rho-policy-lanes mt-4 grid gap-2">
         {sourcesByLane.map(({ lane, sources: laneSources }) => (
           <section
@@ -1677,6 +1704,11 @@ const PolicyRadar = ({
               {laneSources.length ? (
                 laneSources.map((source) => {
                   const selected = source.id === selectedSourceId;
+                  const isLinkUp = /linkup/i.test(source.source);
+                  const freshness =
+                    typeof source.fetchedAt === "number"
+                      ? formatFreshness(source.fetchedAt, nowMs)
+                      : null;
                   return (
                     <article key={source.id} className="grid gap-2">
                       <button
@@ -1700,9 +1732,28 @@ const PolicyRadar = ({
                           <h5 className="truncate text-[13px] font-semibold text-[var(--ink)]">
                             {source.title}
                           </h5>
-                          <p className="mt-0.5 mono text-[10.5px] text-[var(--ink)]">
-                            {source.source}
-                          </p>
+                          <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                            <span className="mono text-[10.5px] text-[var(--ink)]">
+                              {source.source}
+                            </span>
+                            {isLinkUp && (
+                              <span className="rho-policy-provenance rounded-full border border-[var(--line)] bg-[var(--surface-soft)] px-1.5 py-0.5 mono text-[9.5px] uppercase tracking-[0.06em] text-[var(--ink)]">
+                                LinkUp
+                              </span>
+                            )}
+                            {freshness && (
+                              <span
+                                className={clsx(
+                                  "rho-policy-freshness rounded-full px-1.5 py-0.5 mono text-[9.5px] uppercase tracking-[0.06em]",
+                                  freshness === "live"
+                                    ? "border border-[color-mix(in_oklab,var(--mint)_60%,white)] bg-[color-mix(in_oklab,var(--mint)_14%,white)] text-[#0a5d44]"
+                                    : "border border-[var(--line)] bg-[var(--surface-soft)] text-[var(--ink)]",
+                                )}
+                              >
+                                {freshness}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         {selected && <StatusPill label="selected" tone="active" />}
                       </div>
@@ -1710,6 +1761,17 @@ const PolicyRadar = ({
                         {source.excerpt}
                       </p>
                       </button>
+                      {source.url && (
+                        <a
+                          href={source.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex w-fit items-center gap-1 rounded-md border border-[var(--line)] bg-[var(--surface-soft)] px-2 py-1 mono text-[10.5px] text-[var(--ink)] hover:border-[var(--ink-2)]"
+                        >
+                          {source.title}
+                          <span aria-hidden>↗</span>
+                        </a>
+                      )}
                       {selected && (
                         <div className="rho-reveal-panel">
                           <span className="mono text-[10.5px] uppercase tracking-[0.08em] text-[var(--ink)]">
