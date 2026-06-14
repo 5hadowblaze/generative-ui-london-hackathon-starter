@@ -6,6 +6,44 @@ app to demo their own domain inside the build window of a one-day hackathon.
 Speed and clarity beat completeness. Pattern-match aggressively — copy the
 canonical examples named in this guide rather than inventing new ones.
 
+## Hackathon Requirements (June 13, 2026)
+
+### Track 2: Generative UI Requirements
+
+**Required Stack Components:**
+- **CopilotKit** - Agent-to-frontend communication framework
+- **AG-UI** - Agent UI primitives and components
+- **A2UI** - Agent-to-User Interface protocol v0.9
+- **LinkUp** - External data source integration for evidence
+- **Redis** - Session state and agent memory storage
+
+**Submission Deliverables:**
+- Public GitHub repository with working demo
+- 2-3 minute demo video showcasing functionality
+- Social media post about the project
+- Original domain implementation (banking/financial services)
+
+**Judging Criteria:**
+- Creative use of Generative UI + A2UI patterns
+- Technical integration of all required stack components
+- Technical difficulty and complexity
+- Originality and innovation in the domain application
+
+**Technical Constraints:**
+- Must use Gemini 3.5 Flash as the primary LLM
+- A2UI v0.9 protocol compliance required
+- Component catalog must be extensible
+- Real-time UI generation from agent state
+- Evidence-backed responses using LinkUp integration
+
+### Mixed-Track Integration (Optional)
+
+For participants working on both Track 1 (A2A) and Track 2:
+- Connect A2A banking agents to generative UI frontend
+- Demonstrate multi-agent collaboration through generated interfaces
+- Show agent handoffs and state transitions in UI
+- Use Redis for cross-agent session state
+
 ## What this repo is
 
 A Next.js + LangGraph + CopilotKit + A2UI v0.9 starter that demonstrates
