@@ -434,6 +434,57 @@ class BankingAgentTests(unittest.TestCase):
         self.assertEqual(reasoning["source"], "fallback")
         self.assertEqual(reasoning["case_kind"], "referral")
 
+    def test_redis_rehydration_badge_appears_on_repeat_context(self):
+        with patch(
+            "src.banking_agent._redis_source",
+            return_value=(
+                {
+                    "id": "redis-state",
+                    "title": "Case memory",
+                    "source": "Redis",
+                    "excerpt": "Redis rehydration found an existing case summary.",
+                    "rehydrated": True,
+                    "previousStage": "verified",
+                    "previousStoredAt": None,
+                },
+                {"name": "Redis", "ok": True, "status": "live", "message": "rehydrated"},
+            ),
+        ), patch("src.banking_agent._store_redis"):
+            payload = banking_agent._build_payload(
+                "dispute",
+                "I see a charge I do not recognize",
+                "rho-dispute-demo",
+                case_stage="verified",
+                live_a2a_enabled=False,
+            )
+
+        self.assertTrue(payload["summary"]["rehydrated"])
+        self.assertIn("Restored this case from Redis memory", payload["summary"]["rehydratedFrom"])
+        components = banking_agent._components(payload)
+        ids = {component["id"] for component in components}
+        self.assertIn("redis-rehydrated", ids)
+        # The rehydration metadata must not leak into the PolicyRadar source props.
+        redis_sources = [
+            source
+            for source in payload["policy"]["sources"]
+            if source.get("id") == "redis-state"
+        ]
+        self.assertTrue(redis_sources)
+        self.assertNotIn("rehydrated", redis_sources[0])
+
+    def test_no_rehydration_claim_when_redis_off(self):
+        payload = banking_agent._build_payload(
+            "dispute",
+            "I see a charge I do not recognize",
+            "rho-dispute-demo",
+            case_stage="intake",
+            live_a2a_enabled=False,
+        )
+        self.assertFalse(payload["summary"]["rehydrated"])
+        components = banking_agent._components(payload)
+        ids = {component["id"] for component in components}
+        self.assertNotIn("redis-rehydrated", ids)
+
     def test_action_tool_message_regenerates_case_room(self):
         model = banking_agent.BankingCaseModel()
         result = model._generate(

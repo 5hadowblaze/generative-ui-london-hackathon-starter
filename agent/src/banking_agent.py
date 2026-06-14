@@ -356,7 +356,19 @@ def _redis_source(context_id: str) -> tuple[dict[str, str] | None, IntegrationCh
 
         client = redis.Redis.from_url(redis_url, socket_connect_timeout=0.4, socket_timeout=0.4)
         previous = client.get(f"case:{context_id}:summary")
+        rehydrated = bool(previous)
+        previous_stage: str | None = None
+        previous_stored_at: int | None = None
         if previous:
+            try:
+                prior = json.loads(previous.decode() if isinstance(previous, bytes) else previous)
+            except (json.JSONDecodeError, AttributeError):
+                prior = {}
+            if isinstance(prior, dict):
+                stage_value = prior.get("stage")
+                previous_stage = stage_value if isinstance(stage_value, str) else None
+                stored_value = prior.get("storedAt")
+                previous_stored_at = stored_value if isinstance(stored_value, int) else None
             excerpt = f"Redis rehydration found an existing case summary, then refreshed case:{context_id}:* for this turn."
         else:
             excerpt = f"Redis is enabled; this turn will persist summary, relay events, tool calls, policy evidence, and A2UI state under case:{context_id}:*."
@@ -365,6 +377,9 @@ def _redis_source(context_id: str) -> tuple[dict[str, str] | None, IntegrationCh
             "title": "Case memory",
             "source": "Redis",
             "excerpt": excerpt,
+            "rehydrated": rehydrated,
+            "previousStage": previous_stage,
+            "previousStoredAt": previous_stored_at,
         }, {
             "name": "Redis",
             "ok": True,
@@ -380,6 +395,21 @@ def _redis_source(context_id: str) -> tuple[dict[str, str] | None, IntegrationCh
         }
 
 
+def _rehydration_note(previous_stage: str | None, previous_stored_at: int | None) -> str:
+    parts = ["Restored this case from Redis memory"]
+    if previous_stage:
+        parts.append(f"last seen at the '{previous_stage}' stage")
+    if previous_stored_at:
+        age = max(0, int(time.time()) - previous_stored_at)
+        if age < 60:
+            parts.append(f"{age}s ago")
+        elif age < 3600:
+            parts.append(f"{age // 60}m ago")
+        else:
+            parts.append(f"{age // 3600}h ago")
+    return " ".join([parts[0], *([", ".join(parts[1:])] if len(parts) > 1 else [])]) + "."
+
+
 def _store_redis(context_id: str, payload: dict[str, Any]) -> None:
     redis_url = os.getenv("REDIS_URL")
     if not redis_url:
@@ -388,7 +418,8 @@ def _store_redis(context_id: str, payload: dict[str, Any]) -> None:
         import redis
 
         client = redis.Redis.from_url(redis_url, socket_connect_timeout=0.4, socket_timeout=0.4)
-        client.setex(f"case:{context_id}:summary", 3600, json.dumps(payload["summary"]))
+        stored_summary = {**payload["summary"], "storedAt": int(time.time())}
+        client.setex(f"case:{context_id}:summary", 3600, json.dumps(stored_summary))
         client.setex(f"case:{context_id}:agent_events", 3600, json.dumps(payload["relay"]["edges"]))
         client.setex(f"case:{context_id}:tool_calls", 3600, json.dumps(payload["tool"]))
         client.setex(f"case:{context_id}:policy_evidence", 3600, json.dumps(payload["policy"]["sources"]))
@@ -1091,6 +1122,13 @@ def _build_payload(
     if live_a2a_enabled and a2a_url:
         a2a = _call_a2a(a2a_url, request_text, context_id)
     redis_source, redis_check = _redis_source(context_id)
+    rehydrated = False
+    previous_stage: str | None = None
+    previous_stored_at: int | None = None
+    if redis_source:
+        rehydrated = bool(redis_source.pop("rehydrated", False))
+        previous_stage = redis_source.pop("previousStage", None)
+        previous_stored_at = redis_source.pop("previousStoredAt", None)
     a2a_check = _a2a_check(
         live_a2a_enabled=live_a2a_enabled,
         a2a_url=a2a_url,
@@ -1133,6 +1171,8 @@ def _build_payload(
         "reasonedBy": reasoned_by,
         "confidence": policy["confidence"],
         "policyRationale": policy_rationale,
+        "rehydrated": rehydrated,
+        "rehydratedFrom": _rehydration_note(previous_stage, previous_stored_at) if rehydrated else "",
     }
     if a2a and a2a["ok"]:
         _start_full_a2a_transcript_job(a2a_url or "", request_text, context_id)
@@ -1265,10 +1305,22 @@ def _components(payload: dict[str, Any]) -> list[dict[str, Any]]:
     reasoned_by = summary.get("reasonedBy", "fallback")
     policy_rationale = summary.get("policyRationale", "")
     header_children = ["case-row", "case-title", "case-text", "a2a-note"]
-    rationale_components: list[dict[str, Any]] = []
+    extra_components: list[dict[str, Any]] = []
+    if summary.get("rehydrated"):
+        header_children.append("redis-rehydrated")
+        extra_components.append(
+            {
+                "id": "redis-rehydrated",
+                "component": "Callout",
+                "tone": "positive",
+                "title": "Restored from Redis memory",
+                "body": summary.get("rehydratedFrom")
+                or "This case was rehydrated from Redis case memory for the current context.",
+            }
+        )
     if policy_rationale:
         header_children.append("policy-rationale")
-        rationale_components.append(
+        extra_components.append(
             {
                 "id": "policy-rationale",
                 "component": "Callout",
@@ -1319,7 +1371,7 @@ def _components(payload: dict[str, Any]) -> list[dict[str, Any]]:
             "text": payload["outcome"]["body"],
             "tone": "muted",
         },
-        *rationale_components,
+        *extra_components,
         {
             "id": "a2a-note",
             "component": "Callout",
