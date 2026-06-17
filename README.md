@@ -1,16 +1,9 @@
 # Rho Signal Room
 
-Rho Signal Room is a Generative UI banking support demo built for the London
-A2A & A2UI Hackathon at Google London CSG on June 13, 2026.
+🏆 **Top 6 Finalist** at the London A2A & A2UI Hackathon  
+🎤 **Presented on stage** at Google London CSG
 
-## Hackathon Compliance
-
-**Track:** Generative UI (Track 2)
-**Required Stack:** ✅ CopilotKit + AG-UI + A2UI + LinkUp + Redis
-**LLM:** ✅ Gemini 3.5 Flash
-**Submission:** Public repo + demo video + social post
-
-See [HACKATHON_REQUIREMENTS.md](./HACKATHON_REQUIREMENTS.md) for complete requirements.
+A Generative UI banking support demo built for the London A2A & A2UI Hackathon at Google London CSG on June 13, 2026.
 
 The project turns a normal banking support chat into a live case room. A
 customer can ask about a referral, dispute, account closure, or human transfer,
