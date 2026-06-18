@@ -11,6 +11,9 @@ import { SurfaceCanvas, CanvasEmptyState } from "@/components/pdf-analyst/Surfac
 import { FilteredUserMessage } from "@/components/pdf-analyst/FilteredUserMessage";
 import { FilteredAssistantMessage } from "@/components/pdf-analyst/FilteredAssistantMessage";
 import { Split } from "@/components/pdf-analyst/Split";
+import { surfaceBus } from "@/a2ui/surface-bus";
+
+type ReasonedBy = "Gemini" | "fallback";
 
 const AGENT_ID = "banking_agent";
 const A2A_STORAGE_KEY = "rho.liveA2A";
@@ -65,6 +68,8 @@ export default function FixedPageClient({
     const saved = window.localStorage.getItem(A2A_STORAGE_KEY);
     return saved !== "off";
   });
+  const [lastReasonedBy, setLastReasonedBy] = useState<ReasonedBy | null>(null);
+  const [resetKey, setResetKey] = useState(0);
 
   useEffect(() => {
     window.localStorage.setItem(A2A_STORAGE_KEY, liveA2A ? "on" : "off");
@@ -104,6 +109,19 @@ export default function FixedPageClient({
     [agent],
   );
 
+  const resetCase = useCallback(() => {
+    if (agent?.isRunning) {
+      agent.abortRun?.();
+    }
+    // Clear the chat transcript + agent state, drop any rendered surface, and
+    // remount the canvas so the next scenario starts from a clean slate.
+    agent?.setMessages?.([]);
+    agent?.setState?.({});
+    surfaceBus.reset(AGENT_ID);
+    setLastReasonedBy(null);
+    setResetKey((key) => key + 1);
+  }, [agent]);
+
   return (
     <div className="h-screen flex flex-col bg-[var(--bg)]">
       <SiteNav active="fixed" />
@@ -116,6 +134,7 @@ export default function FixedPageClient({
             <span className="rounded-md border border-[var(--line)] bg-[var(--surface)] px-2 py-1 mono text-[10.5px]">
               hybrid demo
             </span>
+            <ResetCaseButton onReset={resetCase} />
             <LiveA2AToggle enabled={liveA2A} compact />
           </div>
         }
@@ -123,6 +142,7 @@ export default function FixedPageClient({
       <IntegrationHealthStrip
         liveA2A={liveA2A}
         initialChecks={initialHealthChecks}
+        reasonedBy={lastReasonedBy}
       />
 
       <div className="flex-1 min-h-0 flex">
@@ -142,7 +162,10 @@ export default function FixedPageClient({
                       generate their own audit room with policy and tool gates.
                     </div>
                   </div>
-                  <LiveA2AToggle enabled={liveA2A} />
+                  <div className="flex shrink-0 flex-col items-end gap-2">
+                    <LiveA2AToggle enabled={liveA2A} />
+                    <ResetCaseButton onReset={resetCase} />
+                  </div>
                 </div>
               </div>
               <ScenarioChips
@@ -170,8 +193,10 @@ export default function FixedPageClient({
           }
           right={
             <SurfaceCanvas
+              key={resetKey}
               channel={AGENT_ID}
               liveA2A={liveA2A}
+              onReasonedBy={setLastReasonedBy}
               emptyState={
                 <CanvasEmptyState
                   title="No case room yet"
@@ -194,9 +219,11 @@ export default function FixedPageClient({
 function IntegrationHealthStrip({
   liveA2A,
   initialChecks,
+  reasonedBy,
 }: {
   liveA2A: boolean;
   initialChecks: HealthCheck[] | null;
+  reasonedBy: ReasonedBy | null;
 }) {
   const [checks, setChecks] = useState<HealthCheck[]>(() =>
     initialChecks?.length ? initialChecks : buildFallbackHealth(liveA2A),
@@ -225,6 +252,22 @@ function IntegrationHealthStrip({
     };
   }, [liveA2A]);
 
+  // Once a case has rendered, the Gemini dot reflects whether the LAST turn
+  // was actually reasoned by the live model (provenance flag from the surface)
+  // rather than just whether a key is configured server-side.
+  const displayChecks = checks.map((check) =>
+    check.name === "Gemini" && reasonedBy
+      ? {
+          ...check,
+          status: (reasonedBy === "Gemini" ? "live" : "off") as HealthState,
+          message:
+            reasonedBy === "Gemini"
+              ? "The last case was classified and reasoned by Gemini 3.5 Flash."
+              : "The last case used the deterministic fallback classifier (no live Gemini reasoning).",
+        }
+      : check,
+  );
+
   return (
     <section
       className="shrink-0 border-b border-[var(--line)] bg-[var(--surface)] px-4 py-2"
@@ -234,7 +277,7 @@ function IntegrationHealthStrip({
         <span className="rho-health-strip__label mono text-[10.5px] uppercase tracking-[0.12em] text-[var(--muted)]">
           Health
         </span>
-        {checks.map((check) => (
+        {displayChecks.map((check) => (
           <span
             key={check.name}
             className="rho-health-strip__item"
@@ -395,6 +438,34 @@ function healthDotClassName(state: HealthState) {
   if (state === "live") return `${base} bg-[var(--mint)]`;
   if (state === "off") return `${base} bg-[var(--muted-2)]`;
   return `${base} bg-[var(--orange)]`;
+}
+
+function ResetCaseButton({ onReset }: { onReset: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onReset}
+      aria-label="Reset case room and chat"
+      title="Clear the chat and the rendered case room for the next scenario"
+      className="rho-reset-case inline-flex items-center gap-1.5 rounded-md border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1 text-[11.5px] font-semibold text-[var(--ink)] transition hover:border-[var(--ink-2)] hover:bg-[var(--surface-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--mint)]"
+    >
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+        <path d="M3 3v5h5" />
+      </svg>
+      Reset case
+    </button>
+  );
 }
 
 function LiveA2AToggle({

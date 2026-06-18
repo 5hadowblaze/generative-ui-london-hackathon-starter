@@ -147,7 +147,19 @@ When the hacker asks for a new something, grep-find and copy the canonical:
   ops. The file's docstring explains why it's a real Python tool (not an
   injected frontend tool) — copy that pattern, not the orphan-`function_call`
   trap.
-- **The A2UI catalog (21 components):**
+- **Hybrid banking case-room agent (`/fixed`, the submission focus):**
+  `agent/src/banking_agent.py`. This is NOT a pure deterministic stub anymore.
+  It is a **hybrid**: `agent/src/case_reasoner.py` calls Gemini (the canonical
+  `dynamic_agent.py` lazy-model + scalar-`result_json` trick + forced
+  `tool_choice`) to classify the case, write a conservative policy rationale,
+  propose a next action, and extract entities — returning structured JSON only.
+  The deterministic Python (`generate_case_surface` / `_components`) owns the
+  A2UI layout and safety gates and slots the model's output into it. On any
+  failure (no key, >8s timeout, invalid JSON) it falls back to the keyword
+  router (`keyword_case_kind`) + canned rationale, so `pnpm smoke` stays
+  offline-green. Edit `case_reasoner.py` to change what the LLM decides; edit
+  `banking_agent.py` to change the layout/gates.
+- **The A2UI catalog (21 base + 3 banking components):**
   `src/a2ui/catalog/definitions.ts` (Zod prop schemas + descriptions) and
   `src/a2ui/catalog/renderers.tsx` (the React renderers). The Python mirror
   the agents cite is `agent/src/catalog.py` (`CATALOG_ID` + `CATALOG_PROMPT`).

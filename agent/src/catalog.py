@@ -72,8 +72,11 @@ component must have `id: "root"`.
     Operational map of A2A handoffs. Node status is idle|active|complete|blocked. Edge status is pending|active|complete|blocked.
 - **ToolActionCard** { actor: personal|customer_service|system, toolName: string, arguments: [{key,value}], status: proposed|running|complete|blocked|failed, resultSummary: string, riskLevel: low|medium|high }
     Preview or receipt for one banking tool call. Use for user-side or bank-side actions.
-- **PolicyRadar** { queries: [string], sources: [{id,title,source,excerpt,url?}], selectedSourceId?: string, confidence: low|medium|high }
-    Evidence panel for bank policy and LinkUp public sources.
+- **PolicyRadar** { queries: [string], sources: [{id,title,source,excerpt,url?,fetchedAt?}], selectedSourceId?: string, confidence: low|medium|high, rationale?: string }
+    Evidence panel for bank policy and LinkUp public sources. `url` makes a
+    source title clickable (opens in a new tab); `fetchedAt` (unix seconds)
+    renders a live "fetched Xs ago / live" freshness badge plus a LinkUp
+    provenance chip. `rationale` shows a short reasoned summary above the lanes.
 
 
 ### Rules

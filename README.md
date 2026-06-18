@@ -22,10 +22,29 @@ http://localhost:3000/fixed
 Rho Signal Room is designed for the Generative UI track: the agent does not only
 answer with text. It chooses and renders structured UI at runtime.
 
+It is a **hybrid generative system**, not an end-to-end "LLM draws the whole
+screen" demo:
+
+- **Gemini 3.5 Flash owns the meaning of each turn.** It classifies the request
+  (referral, dispute, account closure, human transfer, or `unknown`), writes a
+  conservative Rho-Bank policy rationale and confidence, proposes one safe next
+  action, and extracts named entities (e.g. a friend's name, a charge) as
+  structured JSON.
+- **Deterministic Python owns the layout.** The A2UI component tree, the
+  verification gates, the tool-action risk gating, and the integration
+  readiness surface are hand-authored and stable. The model only fills slots in
+  that layout. This keeps a regulated case room safe and predictable.
+- **There is always an offline fallback.** If the live model is missing, times
+  out (>8s), or returns invalid JSON, the system falls back to a deterministic
+  keyword classifier + canned rationale. The case room is visually identical in
+  shape either way, so `pnpm smoke` passes offline with no API key, and a judge
+  prompt never renders a wrong room.
+
 The generated case room makes regulated support work visible:
 
-- **Case intake** - the customer request is classified as referral, dispute,
-  account closure, or human transfer.
+- **Case intake** - Gemini classifies the request as referral, dispute,
+  account closure, human transfer, or `unknown` (a safe "here's what I can do"
+  room). A `reasoned by Gemini / fallback` badge shows which path drove the turn.
 - **Live A2A handoff** - the banking UI can call a server-side A2A personal
   agent and attach the returned response to the case.
 - **Agent relay map** - shows the handoff path between user, personal agent,
@@ -79,13 +98,25 @@ Rho Signal Room uses the hackathon stack directly:
 Customer chat in Next.js
   -> CopilotKit runtime
   -> FastAPI LangGraph banking agent on :8123
-  -> Gemini composes a banking case response
+  -> Gemini classifies the case + writes policy rationale + extracts fields
+       (agent/src/case_reasoner.py — structured JSON only; 8s timeout;
+        deterministic keyword fallback if missing/slow/invalid)
+  -> deterministic Python composes the A2UI layout and slots the model's
+       rationale/confidence/next-action/fields into it
+       (agent/src/banking_agent.py generate_case_surface + _components)
   -> A2UI createSurface/updateComponents/updateDataModel events
   -> React renderer paints the case room in the canvas
   -> optional server-side live A2A call to BANKING_A2A_AGENT_URL
-  -> optional Redis case memory at case:{contextId}:*
-  -> optional LinkUp public evidence
+  -> optional Redis case memory at case:{contextId}:* (with a "Restored from
+       Redis memory" badge on repeat context)
+  -> optional LinkUp public evidence (clickable URLs + freshness in PolicyRadar)
 ```
+
+The split is deliberate: the **LLM owns classification and prose**, the
+**deterministic layout owns the rendered structure and safety gates**. This is a
+hybrid generative UI, not full end-to-end LLM layout generation. The same
+deterministic layout is the offline fallback, so the demo is judge-safe with no
+API key.
 
 The scored Track 1 harness path is not routed through this UI. The UI calls A2A
 as an enrichment source for the generated case room; the Track 1 agents are
@@ -109,6 +140,7 @@ Use these in `/fixed`:
 I want to refer my friend Dana for a Blue Account.
 I see a debit card charge I do not recognize.
 I want a human agent now.
+I lost my card abroad and need emergency cash.   # off-script / unknown
 ```
 
 Expected behavior:
@@ -116,6 +148,12 @@ Expected behavior:
 - Referral cases show a safe next action: collect real friend contact details.
 - Dispute cases show a verification-first path and block transaction mutation.
 - Human-transfer cases show a capability-first support path before escalation.
+- Off-script prompts render the safe `unknown` room ("I can help with disputes,
+  account closure, referrals, or escalation") instead of guessing a wrong case.
+
+Use the **Reset case** button to clear the chat and the rendered surface between
+scenarios. The `reasoned by Gemini / fallback` badge and the Gemini health dot
+show whether the live model or the offline fallback drove the most recent turn.
 
 ## Local Setup
 
@@ -214,8 +252,10 @@ src/a2ui/catalog/renderers.tsx
 src/app/(pdf)/pdf-analyst.css
 agent/main.py
 agent/src/banking_agent.py
+agent/src/case_reasoner.py   # hybrid Gemini classifier + policy rationale
 agent/src/catalog.py
 docs/rho-signal-room.md
+docs/DEMO_SCRIPT.md
 ```
 
 ## Why It Matters

@@ -32,6 +32,12 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.memory import MemorySaver
 
 from src.catalog import CATALOG_ID, CATALOG_PROMPT
+from src.case_reasoner import (
+    CaseKind,
+    CaseReasoning,
+    keyword_case_kind,
+    reason_about_case,
+)
 
 SURFACE = "rho-case-room"
 TOOL_NAME = "render_case_room"
@@ -39,7 +45,6 @@ DEFAULT_A2A_TIMEOUT_SECONDS = 30.0
 DEFAULT_FULL_A2A_TIMEOUT_SECONDS = 180.0
 DEFAULT_LINKUP_TIMEOUT_SECONDS = 10.0
 
-CaseKind = Literal["referral", "dispute", "human_transfer", "account_closure"]
 CaseStage = Literal["intake", "verified", "approved", "completed"]
 
 
@@ -48,6 +53,7 @@ class CaseArgs(TypedDict):
     case_stage: CaseStage
     user_request: str
     context_id: str
+    reasoning_json: str
 
 
 class A2AEnrichment(TypedDict):
@@ -115,17 +121,20 @@ def _is_surface_action_text(text: str) -> bool:
 
 
 def _case_kind(text: str) -> CaseKind:
-    lower = text.lower()
-    if any(
-        phrase in lower
-        for phrase in ["close account", "account closure", "close my account", "close the account"]
-    ):
-        return "account_closure"
-    if any(word in lower for word in ["dispute", "charge", "transaction", "fraud"]):
-        return "dispute"
-    if any(word in lower for word in ["human", "representative", "agent now", "manager"]):
-        return "human_transfer"
-    return "referral"
+    """Keyword fallback router. Delegates to the shared reasoner module so the
+    live LLM path and the offline path classify with the same vocabulary."""
+    return keyword_case_kind(text)
+
+
+def _reasoning_live_enabled() -> bool:
+    """Gate for the live Gemini classification/rationale layer.
+
+    Mirrors the same gate ``generate_case_surface`` uses for layout
+    composition: a Gemini key must be present and generative UI must not be
+    disabled. Keeping the gate here (rather than the per-request Live A2A
+    toggle, which is only reachable from tool runtime) keeps ``pnpm smoke``
+    offline-green and matches the canonical lazy-Gemini pattern."""
+    return bool(_gemini_api_key()) and os.getenv("BANKING_DISABLE_GENERATIVE_UI") != "1"
 
 
 def _context_id(kind: CaseKind) -> str:
@@ -139,6 +148,8 @@ def _status_for(kind: CaseKind) -> tuple[str, str, str]:
         return ("Account closure", "Dependency review", "CS agent")
     if kind == "human_transfer":
         return ("Human transfer boundary", "Policy review", "CS agent")
+    if kind == "unknown":
+        return ("General assistance", "Awaiting case type", "Personal agent")
     return ("Referral", "Ready for user action", "Personal agent")
 
 
@@ -218,6 +229,20 @@ def _policy_sources(
                 "excerpt": "Transfer is a fallback, not the first action, unless scenario-specific instructions require immediate escalation.",
             },
         ],
+        "unknown": [
+            {
+                "id": "kb-overview",
+                "title": "Supported requests",
+                "source": "Rho-Bank KB",
+                "excerpt": "Rho Signal Room can help with card disputes, account closure, referrals, or escalation to a human. Describe the request and the matching case room opens.",
+            },
+            {
+                "id": "kb-safety",
+                "title": "Safety-first routing",
+                "source": "Rho-Bank policy",
+                "excerpt": "When a request is ambiguous, the assistant does not assume an action. It asks the user to confirm the case type before opening a regulated path.",
+            },
+        ],
     }[kind]
     if redis_source:
         base.append(redis_source)
@@ -249,6 +274,7 @@ def _linkup_sources(kind: CaseKind) -> tuple[list[dict[str, str]], IntegrationCh
         "dispute": "public explanation of debit card charge dispute process consumer banking",
         "account_closure": "public explanation of bank account closure process consumer banking",
         "human_transfer": "public customer support escalation best practices financial services",
+        "unknown": "consumer banking customer support common request types overview",
     }[kind]
     payload = json.dumps(
         {
@@ -289,6 +315,7 @@ def _linkup_sources(kind: CaseKind) -> tuple[list[dict[str, str]], IntegrationCh
             "message": f"LinkUp live public search failed with {type(exc).__name__}{detail}; the app did not substitute fake public evidence.",
         }
     out = []
+    fetched_at = int(time.time())
     for index, result in enumerate(data.get("results", [])[:2], 1):
         out.append(
             {
@@ -297,6 +324,7 @@ def _linkup_sources(kind: CaseKind) -> tuple[list[dict[str, str]], IntegrationCh
                 "source": "LinkUp",
                 "excerpt": str(result.get("content") or result.get("snippet") or "")[:220],
                 "url": str(result.get("url") or ""),
+                "fetchedAt": fetched_at,
             }
         )
     if not out:
@@ -328,7 +356,19 @@ def _redis_source(context_id: str) -> tuple[dict[str, str] | None, IntegrationCh
 
         client = redis.Redis.from_url(redis_url, socket_connect_timeout=0.4, socket_timeout=0.4)
         previous = client.get(f"case:{context_id}:summary")
+        rehydrated = bool(previous)
+        previous_stage: str | None = None
+        previous_stored_at: int | None = None
         if previous:
+            try:
+                prior = json.loads(previous.decode() if isinstance(previous, bytes) else previous)
+            except (json.JSONDecodeError, AttributeError):
+                prior = {}
+            if isinstance(prior, dict):
+                stage_value = prior.get("stage")
+                previous_stage = stage_value if isinstance(stage_value, str) else None
+                stored_value = prior.get("storedAt")
+                previous_stored_at = stored_value if isinstance(stored_value, int) else None
             excerpt = f"Redis rehydration found an existing case summary, then refreshed case:{context_id}:* for this turn."
         else:
             excerpt = f"Redis is enabled; this turn will persist summary, relay events, tool calls, policy evidence, and A2UI state under case:{context_id}:*."
@@ -337,6 +377,9 @@ def _redis_source(context_id: str) -> tuple[dict[str, str] | None, IntegrationCh
             "title": "Case memory",
             "source": "Redis",
             "excerpt": excerpt,
+            "rehydrated": rehydrated,
+            "previousStage": previous_stage,
+            "previousStoredAt": previous_stored_at,
         }, {
             "name": "Redis",
             "ok": True,
@@ -352,6 +395,21 @@ def _redis_source(context_id: str) -> tuple[dict[str, str] | None, IntegrationCh
         }
 
 
+def _rehydration_note(previous_stage: str | None, previous_stored_at: int | None) -> str:
+    parts = ["Restored this case from Redis memory"]
+    if previous_stage:
+        parts.append(f"last seen at the '{previous_stage}' stage")
+    if previous_stored_at:
+        age = max(0, int(time.time()) - previous_stored_at)
+        if age < 60:
+            parts.append(f"{age}s ago")
+        elif age < 3600:
+            parts.append(f"{age // 60}m ago")
+        else:
+            parts.append(f"{age // 3600}h ago")
+    return " ".join([parts[0], *([", ".join(parts[1:])] if len(parts) > 1 else [])]) + "."
+
+
 def _store_redis(context_id: str, payload: dict[str, Any]) -> None:
     redis_url = os.getenv("REDIS_URL")
     if not redis_url:
@@ -360,7 +418,8 @@ def _store_redis(context_id: str, payload: dict[str, Any]) -> None:
         import redis
 
         client = redis.Redis.from_url(redis_url, socket_connect_timeout=0.4, socket_timeout=0.4)
-        client.setex(f"case:{context_id}:summary", 3600, json.dumps(payload["summary"]))
+        stored_summary = {**payload["summary"], "storedAt": int(time.time())}
+        client.setex(f"case:{context_id}:summary", 3600, json.dumps(stored_summary))
         client.setex(f"case:{context_id}:agent_events", 3600, json.dumps(payload["relay"]["edges"]))
         client.setex(f"case:{context_id}:tool_calls", 3600, json.dumps(payload["tool"]))
         client.setex(f"case:{context_id}:policy_evidence", 3600, json.dumps(payload["policy"]["sources"]))
@@ -730,6 +789,18 @@ def _tool_for(kind: CaseKind, stage: CaseStage) -> dict[str, Any]:
             "resultSummary": "Policy says the CS agent should help first when the issue is within capability, then transfer after repeated requests or unresolved blockers.",
             "riskLevel": "medium",
         },
+        "unknown": {
+            "actor": "personal",
+            "toolName": "route_request",
+            "arguments": [
+                {"key": "supported", "value": "dispute, account_closure, referral, human_transfer"},
+                {"key": "selected", "value": "awaiting user choice"},
+                {"key": "action_taken", "value": "none"},
+            ],
+            "status": "proposed",
+            "resultSummary": "The personal agent can route this into a dispute, closure, referral, or escalation room once the user confirms what they need. No regulated action runs yet.",
+            "riskLevel": "low",
+        },
     }[kind]
 
     if kind == "dispute":
@@ -760,6 +831,44 @@ def _tool_for(kind: CaseKind, stage: CaseStage) -> dict[str, Any]:
     return tool
 
 
+def _apply_extracted_fields(
+    tool: dict[str, Any],
+    kind: CaseKind,
+    extracted_fields: dict[str, str],
+) -> None:
+    """Slot LLM-extracted entities into the deterministic tool arguments.
+
+    The deterministic layout owns the tool shape; the LLM only fills concrete
+    values it actually heard from the user (e.g. a friend's name, a charge
+    description). Mutates ``tool`` in place. Never invents data."""
+    if not extracted_fields:
+        return
+
+    def _set_arg(key: str, value: str) -> None:
+        for argument in tool["arguments"]:
+            if argument["key"] == key:
+                argument["value"] = value
+                return
+        tool["arguments"].append({"key": key, "value": value})
+
+    if kind == "referral":
+        if extracted_fields.get("friend_name"):
+            _set_arg("friend_name", extracted_fields["friend_name"])
+        if extracted_fields.get("account_type"):
+            _set_arg("account_type", extracted_fields["account_type"])
+    elif kind == "dispute":
+        charge = (
+            extracted_fields.get("charge")
+            or extracted_fields.get("merchant")
+            or extracted_fields.get("amount")
+        )
+        if charge:
+            _set_arg("transaction", charge)
+    elif kind == "account_closure":
+        if extracted_fields.get("balance"):
+            _set_arg("balance", extracted_fields["balance"])
+
+
 def _next_action_for(kind: CaseKind, stage: CaseStage) -> dict[str, str]:
     if stage == "completed":
         return {
@@ -784,6 +893,12 @@ def _next_action_for(kind: CaseKind, stage: CaseStage) -> dict[str, str]:
             "label": "Confirm verified factors",
             "event": "verify_identity",
             "caption": "Move from locked intake to policy-backed tool planning.",
+        }
+    if kind == "unknown":
+        return {
+            "label": "Describe your request",
+            "event": "clarify_request",
+            "caption": "Tell me if this is a dispute, account closure, referral, or escalation.",
         }
     return {
         "label": "Approve tool action",
@@ -812,6 +927,12 @@ def _case_rows(kind: CaseKind, stage: CaseStage) -> list[dict[str, str]]:
             {"item": "Capability check", "state": "within agent support", "owner": "CS agent"},
             {"item": "Repeat request count", "state": "1 of 4", "owner": "Policy"},
             {"item": "Escalation route", "state": "available after blocker", "owner": "Supervisor"},
+        ]
+    if kind == "unknown":
+        return [
+            {"item": "Request type", "state": "needs clarification", "owner": "User"},
+            {"item": "Supported paths", "state": "dispute, closure, referral, transfer", "owner": "Personal agent"},
+            {"item": "Next step", "state": "confirm case type", "owner": "User"},
         ]
     return [
         {"item": "Referral policy", "state": "eligible path", "owner": "CS agent"},
@@ -925,12 +1046,14 @@ def _receipt_for(
         "dispute": next_action["label"],
         "account_closure": next_action["label"],
         "human_transfer": "continue CS-agent support before escalation",
+        "unknown": "confirm the case type so the right case room opens",
     }[kind]
     not_performed = {
         "referral": "Referral submission was not executed; friend contact details and user approval are still required.",
         "dispute": "No transaction lookup or dispute filing was performed before identity verification and explicit approval.",
         "account_closure": "No account closure was performed; balance, pending transfer, and card blockers remain documented.",
         "human_transfer": "Human transfer was not scheduled; policy requires the agent support path before escalation.",
+        "unknown": "No regulated action was taken; the assistant is waiting for the user to choose a supported case type.",
     }[kind]
     return {
         "requiredTechUsed": required,
@@ -940,6 +1063,17 @@ def _receipt_for(
     }
 
 
+def _handoff_status(is_active_edge: bool, case_stage: CaseStage) -> str:
+    """Relay edge status driven by which agent currently owns the handoff.
+
+    The edge leading into the active agent animates ("active") while the case
+    is in progress; once the case completes every handoff settles to
+    "complete". Blocked edges are handled separately (tool boundary)."""
+    if case_stage == "completed":
+        return "complete"
+    return "active" if is_active_edge else "complete"
+
+
 def _build_payload(
     kind: CaseKind,
     request_text: str,
@@ -947,9 +1081,14 @@ def _build_payload(
     *,
     case_stage: CaseStage = "intake",
     live_a2a_enabled: bool = True,
+    reasoning: CaseReasoning | None = None,
 ) -> dict[str, Any]:
     intent, status, active_agent = _status_for(kind)
     tool = _tool_for(kind, case_stage)
+    extracted_fields = dict(reasoning["extracted_fields"]) if reasoning else {}
+    reasoned_by = "Gemini" if reasoning and reasoning["source"] == "llm" else "fallback"
+    policy_rationale = reasoning["policy_rationale"] if reasoning else ""
+    _apply_extracted_fields(tool, kind, extracted_fields)
     relay = {
         "nodes": [
             {"id": "user", "label": "User", "role": "Request source", "status": "complete"},
@@ -959,19 +1098,23 @@ def _build_payload(
             {"id": "tools", "label": "Env tools", "role": "Action boundary", "status": "blocked" if tool["status"] == "blocked" else "idle"},
         ],
         "edges": [
-            {"from": "user", "to": "personal", "label": request_text[:74], "status": "complete"},
-            {"from": "personal", "to": "cs", "label": "Policy and procedure check", "status": "complete"},
+            {"from": "user", "to": "personal", "label": request_text[:74], "status": _handoff_status(active_agent == "Personal agent", case_stage)},
+            {"from": "personal", "to": "cs", "label": "Policy and procedure check", "status": _handoff_status(active_agent == "CS agent", case_stage)},
             {"from": "cs", "to": "kb", "label": "Retrieve policy evidence", "status": "complete"},
             {"from": "cs", "to": "tools", "label": "Tool eligibility reviewed", "status": "blocked" if tool["status"] == "blocked" else "pending"},
         ],
     }
     linkup, linkup_check = _linkup_sources(kind)
+    default_confidence = "high" if kind != "human_transfer" else "medium"
+    if kind == "unknown":
+        default_confidence = "low"
     policy = {
         "queries": {
             "referral": ["referral Blue Account", "submit_referral", "user discoverable tool"],
             "dispute": ["card dispute verification", "open_card_dispute", "identity factors"],
             "account_closure": ["account closure blockers", "zero balance", "authorized users"],
             "human_transfer": ["human transfer policy", "capability-first support", "repeat request"],
+            "unknown": ["supported requests", "route_request", "confirm case type"],
         }[kind],
         "sources": [],
         "selectedSourceId": {
@@ -979,14 +1122,24 @@ def _build_payload(
             "dispute": "kb-verification",
             "account_closure": "kb-closure",
             "human_transfer": "kb-transfer",
+            "unknown": "kb-overview",
         }[kind],
-        "confidence": "high" if kind != "human_transfer" else "medium",
+        "confidence": reasoning["confidence"] if reasoning else default_confidence,
+        "rationale": policy_rationale,
+        "reasonedBy": reasoned_by,
     }
     a2a: A2AEnrichment | None = None
     a2a_url = os.getenv("BANKING_A2A_AGENT_URL")
     if live_a2a_enabled and a2a_url:
         a2a = _call_a2a(a2a_url, request_text, context_id)
     redis_source, redis_check = _redis_source(context_id)
+    rehydrated = False
+    previous_stage: str | None = None
+    previous_stored_at: int | None = None
+    if redis_source:
+        rehydrated = bool(redis_source.pop("rehydrated", False))
+        previous_stage = redis_source.pop("previousStage", None)
+        previous_stored_at = redis_source.pop("previousStoredAt", None)
     a2a_check = _a2a_check(
         live_a2a_enabled=live_a2a_enabled,
         a2a_url=a2a_url,
@@ -1026,6 +1179,11 @@ def _build_payload(
         "a2aLive": bool(a2a and a2a["ok"]),
         "strictIntegrationsRequired": strict_integrations_required,
         "integrationChecks": integration_checks,
+        "reasonedBy": reasoned_by,
+        "confidence": policy["confidence"],
+        "policyRationale": policy_rationale,
+        "rehydrated": rehydrated,
+        "rehydratedFrom": _rehydration_note(previous_stage, previous_stored_at) if rehydrated else "",
     }
     if a2a and a2a["ok"]:
         _start_full_a2a_transcript_job(a2a_url or "", request_text, context_id)
@@ -1095,21 +1253,28 @@ def _build_payload(
                 "dispute": "Dispute case gated by verification",
                 "account_closure": "Account closure dependencies mapped",
                 "human_transfer": "Human transfer held at policy gate",
+                "unknown": "Here's how I can help",
             }[kind] if not readiness_blockers else "Integration readiness blocked",
             "body": {
                 "referral": "The UI generated a user-side referral plan, identified missing details, and kept the action out of the bank-tool boundary.",
                 "dispute": "The UI generated a verification-first case path so private transaction data is not exposed before policy conditions are met.",
                 "account_closure": "The UI generated a dependency-first closure path so blockers are visible before any irreversible account action.",
                 "human_transfer": "The UI generated the transfer policy boundary and shows why immediate escalation is not the first action.",
+                "unknown": "I can help with card disputes, account closure, referrals, or escalation to a human. Tell me which one fits and I'll open the matching case room with the right policy checks.",
             }[kind] if not readiness_blockers else "Live A2A mode is submission mode: A2A, Redis, and LinkUp must be configured and reachable. The app did not silently substitute deterministic evidence for missing required integrations.",
         },
     }
+    if policy_rationale and not readiness_blockers:
+        payload["nextAction"]["caption"] = reasoning["next_action"] if reasoning else payload["nextAction"]["caption"]
     payload["receipt"] = _receipt_for(
         kind,
         payload["tool"],
         payload["nextAction"],
         integration_checks,
     )
+    payload["receipt"]["reasonedBy"] = reasoned_by
+    if policy_rationale:
+        payload["receipt"]["policyRationale"] = policy_rationale
     payload["policy"]["sources"] = _policy_sources(
         kind,
         linkup,
@@ -1121,6 +1286,16 @@ def _build_payload(
         ]
         or [integration_checks[0]],
     )
+    if reasoned_by == "Gemini" and policy_rationale:
+        payload["policy"]["sources"].insert(
+            0,
+            {
+                "id": "gemini-rationale",
+                "title": "Gemini policy rationale",
+                "source": "Gemini reasoning",
+                "excerpt": policy_rationale,
+            },
+        )
     if a2a and a2a["ok"]:
         payload["policy"]["sources"].append(
             {
@@ -1138,6 +1313,34 @@ def _build_payload(
 def _components(payload: dict[str, Any]) -> list[dict[str, Any]]:
     summary = payload["summary"]
     next_action = payload["nextAction"]
+    reasoned_by = summary.get("reasonedBy", "fallback")
+    policy_rationale = summary.get("policyRationale", "")
+    header_children = ["case-row", "case-title", "case-text", "a2a-note"]
+    extra_components: list[dict[str, Any]] = []
+    if summary.get("rehydrated"):
+        header_children.append("redis-rehydrated")
+        extra_components.append(
+            {
+                "id": "redis-rehydrated",
+                "component": "Callout",
+                "tone": "positive",
+                "title": "Restored from Redis memory",
+                "body": summary.get("rehydratedFrom")
+                or "This case was rehydrated from Redis case memory for the current context.",
+            }
+        )
+    if policy_rationale:
+        header_children.append("policy-rationale")
+        extra_components.append(
+            {
+                "id": "policy-rationale",
+                "component": "Callout",
+                "tone": "info" if reasoned_by == "Gemini" else "neutral",
+                "title": "Reasoned by Gemini" if reasoned_by == "Gemini" else "Policy rationale (fallback)",
+                "body": policy_rationale,
+            }
+        )
+    header_children.append("next-action-row")
     return [
         {
             "id": "root",
@@ -1150,17 +1353,23 @@ def _components(payload: dict[str, Any]) -> list[dict[str, Any]]:
             "id": "header-stack",
             "component": "Stack",
             "gap": "sm",
-            "children": ["case-row", "case-title", "case-text", "a2a-note", "next-action-row"],
+            "children": header_children,
         },
         {
             "id": "case-row",
             "component": "Row",
             "gap": "sm",
-            "children": ["intent-badge", "status-badge", "agent-badge"],
+            "children": ["intent-badge", "status-badge", "agent-badge", "reasoned-badge"],
         },
         {"id": "intent-badge", "component": "Badge", "label": summary["intent"], "tone": "info"},
         {"id": "status-badge", "component": "Badge", "label": summary["status"], "tone": "warning" if "required" in summary["status"].lower() else "positive"},
         {"id": "agent-badge", "component": "Badge", "label": summary["activeAgent"], "tone": "neutral"},
+        {
+            "id": "reasoned-badge",
+            "component": "Badge",
+            "label": f"reasoned by {reasoned_by}",
+            "tone": "positive" if reasoned_by == "Gemini" else "neutral",
+        },
         {
             "id": "case-title",
             "component": "Heading",
@@ -1173,6 +1382,7 @@ def _components(payload: dict[str, Any]) -> list[dict[str, Any]]:
             "text": payload["outcome"]["body"],
             "tone": "muted",
         },
+        *extra_components,
         {
             "id": "a2a-note",
             "component": "Callout",
@@ -1254,6 +1464,7 @@ def _components(payload: dict[str, Any]) -> list[dict[str, Any]]:
             "sources": payload["policy"]["sources"],
             "selectedSourceId": payload["policy"]["selectedSourceId"],
             "confidence": payload["policy"]["confidence"],
+            **({"rationale": payload["policy"]["rationale"]} if payload["policy"].get("rationale") else {}),
         },
         {
             "id": "case-table",
@@ -1426,21 +1637,57 @@ def _valid_component_tree(components: Any) -> bool:
     return root_count == 1
 
 
+def _parse_reasoning_arg(reasoning_json: str, fallback_kind: CaseKind) -> CaseReasoning:
+    """Rebuild a CaseReasoning from the tool arg, degrading to a fallback."""
+    try:
+        parsed = json.loads(reasoning_json) if reasoning_json else {}
+    except (json.JSONDecodeError, TypeError):
+        parsed = {}
+    if not isinstance(parsed, dict):
+        parsed = {}
+    kind = parsed.get("case_kind")
+    if kind not in {"referral", "dispute", "human_transfer", "account_closure", "unknown"}:
+        kind = fallback_kind
+    confidence = parsed.get("confidence")
+    if confidence not in {"low", "medium", "high"}:
+        confidence = "medium"
+    source = parsed.get("source")
+    if source not in {"llm", "fallback"}:
+        source = "fallback"
+    raw_fields = parsed.get("extracted_fields")
+    extracted = (
+        {str(k): str(v) for k, v in raw_fields.items()}
+        if isinstance(raw_fields, dict)
+        else {}
+    )
+    return {
+        "case_kind": kind,
+        "confidence": confidence,
+        "policy_rationale": str(parsed.get("policy_rationale") or ""),
+        "next_action": str(parsed.get("next_action") or ""),
+        "extracted_fields": extracted,
+        "source": source,
+    }
+
+
 @tool
 def render_case_room(
     case_kind: CaseKind,
     case_stage: CaseStage,
     user_request: str,
     context_id: str,
+    reasoning_json: str,
     runtime: ToolRuntime[Any],
 ) -> str:
     """Render a generated banking case room for the current support request."""
+    reasoning = _parse_reasoning_arg(reasoning_json, case_kind)
     payload = _build_payload(
         case_kind,
         user_request,
         context_id,
         case_stage=case_stage,
         live_a2a_enabled=_live_a2a_enabled(runtime),
+        reasoning=reasoning,
     )
     components, data = generate_case_surface(payload)
     return a2ui.render(
@@ -1453,7 +1700,14 @@ def render_case_room(
 
 
 class BankingCaseModel(BaseChatModel):
-    """Deterministic model that turns each user turn into one case-room render."""
+    """Turns each user turn into one case-room render.
+
+    Hybrid: it asks ``case_reasoner.reason_about_case`` (live Gemini when a key
+    is present, else a deterministic keyword fallback) to classify the case and
+    produce the policy rationale / next action / extracted fields, then emits a
+    single ``render_case_room`` tool call carrying that reasoning. The
+    deterministic layout in ``generate_case_surface`` / ``_components`` owns the
+    rendered structure and safety gates."""
 
     @property
     def _llm_type(self) -> str:
@@ -1476,20 +1730,22 @@ class BankingCaseModel(BaseChatModel):
             message: BaseMessage = AIMessage(content="Case room rendered.")
         else:
             text = _latest_case_request(messages)
-            kind = _case_kind(text)
+            reasoning = reason_about_case(text, live=_reasoning_live_enabled())
+            kind = reasoning["case_kind"]
             stage = _case_stage(messages)
-            args: CaseArgs = {
+            args: dict[str, Any] = {
                 "case_kind": kind,
                 "case_stage": stage,
                 "user_request": text,
                 "context_id": _context_id(kind),
+                "reasoning_json": json.dumps(reasoning),
             }
             message = AIMessage(
                 content="",
                 tool_calls=[
                     {
                         "name": TOOL_NAME,
-                        "args": dict(args),
+                        "args": args,
                         "id": f"call_{uuid.uuid4().hex[:12]}",
                     }
                 ],

@@ -689,6 +689,49 @@
   border-color: color-mix(in oklab, var(--lilac) 52%, var(--line));
 }
 
+/* ── Live A2A handoff animation ──────────────────────────────────────────
+ * CSS-only (no framer-motion). An "active" handoff edge pulses and runs a
+ * dot along its connector path; an "active" node pulses a soft halo. These
+ * are driven by the agent's real edge/node status (see banking_agent
+ * _build_payload), settle to a static state when complete, and turn off
+ * under prefers-reduced-motion (block near the other reduce rules). */
+.pdf-analyst-root .rho-relay-node {
+  position: relative;
+}
+
+.pdf-analyst-root .rho-relay-node--active-pulse {
+  animation: rho-active-pulse 1500ms ease-in-out infinite;
+}
+
+.pdf-analyst-root .rho-relay-node__pulse {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--mint);
+  animation: rho-active-pulse 1500ms ease-in-out infinite;
+}
+
+.pdf-analyst-root .rho-relay-edge--active {
+  box-shadow: inset 3px 0 0 var(--mint);
+  animation: rho-relay-edge-pulse 1400ms ease-in-out infinite;
+}
+
+.pdf-analyst-root .rho-relay-map ol .rho-relay-edge--active::after {
+  content: "";
+  position: absolute;
+  top: 15px;
+  left: -12px;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--mint);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--mint) 18%, transparent);
+  animation: rho-edge-travel 1400ms ease-in-out infinite;
+}
+
 .pdf-analyst-root .rho-policy-source--selected {
   border-color: color-mix(in oklab, var(--mint) 70%, var(--ink));
   background:
@@ -1021,6 +1064,34 @@
   }
 }
 
+@keyframes rho-relay-edge-pulse {
+  0%,
+  100% {
+    box-shadow:
+      inset 3px 0 0 var(--mint),
+      0 0 0 0 color-mix(in oklab, var(--mint) 18%, transparent);
+  }
+  50% {
+    box-shadow:
+      inset 3px 0 0 var(--mint),
+      0 0 0 5px color-mix(in oklab, var(--mint) 9%, transparent);
+  }
+}
+
+@keyframes rho-edge-travel {
+  0% {
+    left: -12px;
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    left: -1px;
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pdf-analyst-root
     .rho-procedural-surface[data-revealing="true"]
@@ -1039,12 +1110,19 @@
     .rho-procedural-surface[data-revealing="true"]
     .rho-proc-block::before,
   .pdf-analyst-root .rho-a2a-wait__step[data-state="active"] .rho-a2a-wait__dot,
+  .pdf-analyst-root .rho-relay-node--active-pulse,
+  .pdf-analyst-root .rho-relay-node__pulse,
+  .pdf-analyst-root .rho-relay-edge--active,
+  .pdf-analyst-root .rho-relay-map ol .rho-relay-edge--active::after,
   .pdf-analyst-root
     .rho-procedural-surface[data-revealing="true"]
     .rho-relay-map
     ol
     .rho-proc-item::before {
     animation: none;
+  }
+  .pdf-analyst-root .rho-relay-map ol .rho-relay-edge--active::after {
+    display: none;
   }
 }
 
